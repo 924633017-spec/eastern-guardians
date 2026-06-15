@@ -2077,6 +2077,31 @@ function App() {
     }
 
     const normalizedCheckoutEmail = checkoutEmail.trim().toLowerCase();
+    const pendingGumroadCheckout =
+      checkoutMode === "pack" && checkoutSessionId ? readPendingGumroadCheckout() : null;
+    const hasMatchingPendingGumroadCheckout =
+      checkoutProvider === "gumroad" &&
+      checkoutMode === "pack" &&
+      checkoutSessionId &&
+      pendingGumroadCheckout?.sessionId === checkoutSessionId &&
+      pendingGumroadCheckout.email === normalizedCheckoutEmail &&
+      pendingGumroadCheckout.title === checkoutTitle;
+
+    if (
+      checkoutMode === "pack" &&
+      checkoutProvider === "gumroad" &&
+      !hasMatchingPendingGumroadCheckout
+    ) {
+      params.delete("checkout");
+      params.delete("checkout_session");
+      params.delete("mode");
+      params.delete("provider");
+      params.delete("email");
+      params.delete("title");
+      const nextUrl = `${window.location.pathname}${params.toString() ? `?${params.toString()}` : ""}${window.location.hash}`;
+      window.history.replaceState({}, "", nextUrl);
+      return;
+    }
 
     async function confirmReturnedCheckout() {
       setCheckoutReturnState("processing");
