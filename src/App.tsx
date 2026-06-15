@@ -181,6 +181,15 @@ function wait(ms: number) {
   return new Promise((resolve) => window.setTimeout(resolve, ms));
 }
 
+function loadImage(src: string) {
+  return new Promise<HTMLImageElement>((resolve, reject) => {
+    const image = new Image();
+    image.onload = () => resolve(image);
+    image.onerror = () => reject(new Error(`Failed to load image: ${src}`));
+    image.src = src;
+  });
+}
+
 function readPendingGumroadCheckout(): PendingGumroadCheckout | null {
   try {
     const raw = localStorage.getItem(GUMROAD_PENDING_CHECKOUT_KEY);
@@ -3120,20 +3129,49 @@ function App() {
     scrollToTop();
   };
 
-  const exportShareCard = () => {
+  const exportShareCard = async () => {
     if (!shareCardReady) {
       setShareMessage("Guardian card is still rendering.");
       return;
     }
 
-    const blob = new Blob([shareCardSvg], { type: "image/svg+xml;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `${activeDeity.id}-${activeCardFinish.id}-guardian-card.svg`;
-    link.click();
-    URL.revokeObjectURL(url);
-    setShareMessage("Guardian card exported.");
+    try {
+      const svgBlob = new Blob([shareCardSvg], { type: "image/svg+xml;charset=utf-8" });
+      const svgUrl = URL.createObjectURL(svgBlob);
+      const renderedImage = await loadImage(svgUrl);
+      const canvas = document.createElement("canvas");
+      canvas.width = 1200;
+      canvas.height = 1600;
+
+      const context = canvas.getContext("2d");
+      if (!context) {
+        URL.revokeObjectURL(svgUrl);
+        setShareMessage("This browser could not prepare the guardian card image.");
+        return;
+      }
+
+      context.drawImage(renderedImage, 0, 0, canvas.width, canvas.height);
+      URL.revokeObjectURL(svgUrl);
+
+      const pngBlob = await new Promise<Blob | null>((resolve) => {
+        canvas.toBlob((blob) => resolve(blob), "image/png");
+      });
+
+      if (!pngBlob) {
+        setShareMessage("This browser could not export the guardian card image.");
+        return;
+      }
+
+      const pngUrl = URL.createObjectURL(pngBlob);
+      const link = document.createElement("a");
+      link.href = pngUrl;
+      link.download = `${activeDeity.id}-${activeCardFinish.id}-guardian-card.png`;
+      link.click();
+      URL.revokeObjectURL(pngUrl);
+      setShareMessage("Guardian card exported as PNG.");
+    } catch {
+      setShareMessage("Guardian card export failed on this device.");
+    }
   };
 
   const copyOracle = async () => {
