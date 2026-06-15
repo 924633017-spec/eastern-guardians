@@ -157,8 +157,16 @@ type PackCheckoutStep = "details" | "checkout";
 
 type StaticPageId = "trust" | "privacy" | "terms" | "refund";
 type CheckoutReturnState = "idle" | "processing" | "success" | "error";
+type PendingGumroadCheckout = {
+  sessionId: string;
+  email: string;
+  title: string;
+  guardian: string;
+  createdAt: string;
+};
 
 const STORAGE_KEY = "digital-shrine-profile";
+const GUMROAD_PENDING_CHECKOUT_KEY = "digital-shrine-gumroad-pending-checkout";
 const commerceGateway = createCommerceGateway();
 
 function getTodayKey() {
@@ -167,6 +175,53 @@ function getTodayKey() {
 
 function getDefaultCheckoutEmail() {
   return "hello@mythicguardian.app";
+}
+
+function readPendingGumroadCheckout(): PendingGumroadCheckout | null {
+  try {
+    const raw = localStorage.getItem(GUMROAD_PENDING_CHECKOUT_KEY);
+    if (!raw) {
+      return null;
+    }
+
+    const parsed = JSON.parse(raw) as Partial<PendingGumroadCheckout>;
+    if (
+      typeof parsed.sessionId !== "string" ||
+      typeof parsed.email !== "string" ||
+      typeof parsed.title !== "string" ||
+      typeof parsed.guardian !== "string" ||
+      typeof parsed.createdAt !== "string"
+    ) {
+      localStorage.removeItem(GUMROAD_PENDING_CHECKOUT_KEY);
+      return null;
+    }
+
+    return {
+      sessionId: parsed.sessionId,
+      email: parsed.email.trim().toLowerCase(),
+      title: parsed.title,
+      guardian: parsed.guardian,
+      createdAt: parsed.createdAt
+    };
+  } catch {
+    localStorage.removeItem(GUMROAD_PENDING_CHECKOUT_KEY);
+    return null;
+  }
+}
+
+function writePendingGumroadCheckout(checkout: PendingGumroadCheckout) {
+  localStorage.setItem(GUMROAD_PENDING_CHECKOUT_KEY, JSON.stringify(checkout));
+}
+
+function clearPendingGumroadCheckout(sessionId?: string) {
+  const pending = readPendingGumroadCheckout();
+  if (!pending) {
+    return;
+  }
+
+  if (!sessionId || pending.sessionId === sessionId) {
+    localStorage.removeItem(GUMROAD_PENDING_CHECKOUT_KEY);
+  }
 }
 
 function scrollToTop() {
@@ -2848,6 +2903,13 @@ function App() {
     );
     if (session.status === "pending" && session.redirectUrl) {
       if (session.provider === "gumroad") {
+        writePendingGumroadCheckout({
+          sessionId: session.sessionId,
+          email: checkoutEmail.trim().toLowerCase(),
+          title: selectedPack.title,
+          guardian: selectedPack.guardian,
+          createdAt: new Date().toISOString()
+        });
         window.open(session.redirectUrl, "_blank", "noopener,noreferrer");
         closePackSheet();
         return;
@@ -2857,6 +2919,71 @@ function App() {
     }
     closePackSheet();
   };
+
+  useEffect(() => {
+    if (providerReadiness.provider !== "gumroad") {
+      return;
+    }
+
+    const pendingCheckout = readPendingGumroadCheckout();
+    if (!pendingCheckout) {
+      return;
+    }
+
+    const pending = pendingCheckout;
+    const pendingAgeMs = Date.now() - Date.parse(pending.createdAt);
+    if (!Number.isFinite(pendingAgeMs) || pendingAgeMs > 1000 * 60 * 60 * 24) {
+      clearPendingGumroadCheckout();
+      return;
+    }
+
+    let cancelled = false;
+
+    async function reconcilePendingGumroadCheckout() {
+      try {
+        const sessionStatus = await commerceGateway.getCheckoutSessionStatus(pending.sessionId);
+        if (cancelled || !sessionStatus.found || sessionStatus.status !== "completed") {
+          return;
+        }
+
+        const restoredState = await commerceGateway.restorePurchases({
+          email: pending.email
+        });
+        if (cancelled) {
+          return;
+        }
+
+        const nextEntitlements = deriveCommerceEntitlements(restoredState);
+        setCommerceState(restoredState);
+        setProfile((current) => ({
+          ...current,
+          membershipTier: nextEntitlements.membershipTier,
+          unlockedPacks: nextEntitlements.unlockedPacks
+        }));
+        setRestoreEmail(pending.email);
+        setShareMessage(`${pending.title} confirmed for ${pending.email}.`);
+        setCheckoutReturnState("success");
+        setCheckoutReturnMessage(
+          pending.title === allGuardiansPack.title
+            ? "Payment confirmed. All five guardians are now unlocked."
+            : `Payment confirmed. ${pending.guardian} is now unlocked.`
+        );
+        setSelectedPack(null);
+        setPendingCheckoutSession((current) =>
+          current && current.sessionId === pending.sessionId ? null : current
+        );
+        clearPendingGumroadCheckout(pending.sessionId);
+      } catch {
+        // Keep the pending record so restore can still succeed after the webhook arrives.
+      }
+    }
+
+    void reconcilePendingGumroadCheckout();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [providerReadiness.provider, allGuardiansPack.title]);
 
   const handleRestorePurchases = async () => {
     const recoveryEmail = restoreEmail || recentCommerceEmail || getDefaultCheckoutEmail();

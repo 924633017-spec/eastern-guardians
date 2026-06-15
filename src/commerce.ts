@@ -312,6 +312,18 @@ export function unlockPackPurchase(state: CommerceState, input: PackPurchaseInpu
   const nextState = upsertAccount(state, input.email);
   const purchasedAt = new Date().toISOString();
 
+  const existingOrder = nextState.orders.some(
+    (order) =>
+      order.kind === "pack" &&
+      order.email === input.email.trim().toLowerCase() &&
+      order.title === input.title &&
+      order.status !== "canceled"
+  );
+
+  if (existingOrder) {
+    return nextState;
+  }
+
   return {
     ...nextState,
     orders: [

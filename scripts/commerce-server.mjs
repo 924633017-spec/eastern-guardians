@@ -192,6 +192,15 @@ function handleConfirmPack(state, input) {
   const next = upsertAccount(state, input.email);
   const purchasedAt = new Date().toISOString();
 
+  if (hasExistingPackOrder(next, String(input.email).trim().toLowerCase(), input.title)) {
+    return track(next, "checkout_confirmed", {
+      provider: PROVIDER,
+      mode: "pack",
+      guardian: input.guardian,
+      packTitle: input.title
+    });
+  }
+
   return track(
     {
       ...next,
