@@ -2708,13 +2708,7 @@ function App() {
   };
 
   const startPackCheckout = async (pack: RitualPack, options?: { closeSheet?: boolean }) => {
-    const checkoutEmail = activeCheckoutEmail;
-    if (!validateCheckoutEmail(checkoutEmail)) {
-      setCheckoutReturnState("error");
-      setCheckoutReturnMessage("Enter a valid restore email before checkout so we can return this unlock to you.");
-      setShareMessage("Add your email first so this paid unlock can be restored correctly.");
-      return;
-    }
+    const checkoutEmail = validateCheckoutEmail(activeCheckoutEmail) ? activeCheckoutEmail : "";
     const session = await commerceGateway.createPackCheckoutSession({
       email: checkoutEmail,
       title: pack.title,
@@ -2724,23 +2718,29 @@ function App() {
     setPendingCheckoutSession(session);
     setCheckoutReturnState("idle");
     setCheckoutReturnMessage("");
-    setRestoreEmail(checkoutEmail.trim().toLowerCase());
+    if (checkoutEmail) {
+      setRestoreEmail(checkoutEmail.trim().toLowerCase());
+    }
     setShareMessage(
       session.status === "requires_manual_review"
         ? "Pack demand captured for launch prep. Enable live checkout before fulfillment."
         : session.provider === "gumroad"
-          ? "Opening Gumroad checkout. After payment, you will return here to continue access setup."
+          ? checkoutEmail
+            ? "Opening Gumroad checkout. After payment, come back with the same email to restore access here."
+            : "Opening Gumroad checkout. Pay now, then return and use your Gumroad email to restore access here."
           : "Opening secure checkout. After payment, this guardian unlocks here."
     );
     if (session.status === "pending" && session.redirectUrl) {
       if (session.provider === "gumroad") {
-        writePendingGumroadCheckout({
-          sessionId: session.sessionId,
-          email: checkoutEmail.trim().toLowerCase(),
-          title: pack.title,
-          guardian: pack.guardian,
-          createdAt: new Date().toISOString()
-        });
+        if (checkoutEmail) {
+          writePendingGumroadCheckout({
+            sessionId: session.sessionId,
+            email: checkoutEmail.trim().toLowerCase(),
+            title: pack.title,
+            guardian: pack.guardian,
+            createdAt: new Date().toISOString()
+          });
+        }
         if (options?.closeSheet) {
           closePackSheet();
         }
@@ -3500,20 +3500,20 @@ function App() {
               {providerReadiness.provider === "gumroad" ? (
                 <div className="checkout-urgency-note commerce-status-grid">
                   <span>Checkout</span>
-                  <strong>Pay on Gumroad, then come back here with the same email.</strong>
+                  <strong>Pay on Gumroad now. Email is only needed later if you want to restore access here.</strong>
                   <input
                     className="checkout-field"
                     type="email"
                     inputMode="email"
                     autoComplete="email"
-                    placeholder="Enter your checkout email"
+                    placeholder="Optional: enter your Gumroad email for easier restore"
                     value={restoreEmail}
                     onChange={(event) => setRestoreEmail(normalizeCheckoutEmail(event.target.value))}
                   />
                   <small className="checkout-helper-line">
                     {validateCheckoutEmail(activeCheckoutEmail)
                       ? `Checkout email: ${activeCheckoutEmail}`
-                      : "Enter the email you will use on Gumroad so unlock and restore work reliably."}
+                      : "You can pay first. If needed, enter the Gumroad email later and tap Restore access."}
                   </small>
                   <button className="ghost-button commerce-restore-button" onClick={() => void handleRestorePurchases()}>
                     Restore access
@@ -3654,20 +3654,20 @@ function App() {
                 {providerReadiness.provider === "gumroad" ? (
                   <div className="checkout-urgency-note">
                     <span>Restore access</span>
-                    <strong>Use the same Gumroad email if you need to pull the unlock back into your shrine.</strong>
+                    <strong>Payment can happen now. Add your Gumroad email only if you need to restore the unlock here later.</strong>
                     <input
                       className="checkout-field"
                       type="email"
                       inputMode="email"
                       autoComplete="email"
-                      placeholder="Enter your checkout email"
+                      placeholder="Optional: enter your Gumroad email"
                       value={restoreEmail}
                       onChange={(event) => setRestoreEmail(normalizeCheckoutEmail(event.target.value))}
                     />
                     <small className="checkout-helper-line">
                       {validateCheckoutEmail(activeCheckoutEmail)
                         ? `Checkout email: ${activeCheckoutEmail}`
-                        : "Use the same email on Gumroad and here so your paid unlock can be restored correctly."}
+                        : "You do not need an email to start payment. Add it later only if you need Restore access."}
                     </small>
                   </div>
                 ) : null}

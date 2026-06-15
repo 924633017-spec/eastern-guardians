@@ -227,8 +227,12 @@ function createHostedCheckoutUrl(params: {
   returnUrl.searchParams.set("checkout_session", params.sessionId);
   returnUrl.searchParams.set("provider", params.provider);
   returnUrl.searchParams.set("mode", "pack");
-  returnUrl.searchParams.set("email", params.email.trim().toLowerCase());
   returnUrl.searchParams.set("title", params.title);
+  const normalizedEmail = params.email.trim().toLowerCase();
+
+  if (normalizedEmail) {
+    returnUrl.searchParams.set("email", normalizedEmail);
+  }
 
   const gumroadPackLinks: Record<string, string> = {
     "Unlock All Guardians": resolveGumroadCheckoutLink("Unlock All Guardians", import.meta.env.VITE_GUMROAD_UNLOCK_ALL_URL),
@@ -253,7 +257,9 @@ function createHostedCheckoutUrl(params: {
   if (externalLink) {
     const checkoutUrl = new URL(externalLink);
     if (params.provider === "paypal") {
-      checkoutUrl.searchParams.set("email", params.email.trim().toLowerCase());
+      if (normalizedEmail) {
+        checkoutUrl.searchParams.set("email", normalizedEmail);
+      }
       checkoutUrl.searchParams.set("utm_source", "eastern-guardians");
       checkoutUrl.searchParams.set("utm_medium", "app");
       checkoutUrl.searchParams.set("utm_campaign", "pack");
@@ -261,11 +267,15 @@ function createHostedCheckoutUrl(params: {
       checkoutUrl.searchParams.set("custom", returnUrl.toString());
     } else if (params.provider === "gumroad") {
       checkoutUrl.searchParams.set("wanted", "true");
-      checkoutUrl.searchParams.set("email", params.email.trim().toLowerCase());
+      if (normalizedEmail) {
+        checkoutUrl.searchParams.set("email", normalizedEmail);
+      }
       checkoutUrl.searchParams.set("recommended_by", "eastern-guardians");
       checkoutUrl.searchParams.set("session_id", params.sessionId);
     } else {
-      checkoutUrl.searchParams.set("checkout[email]", params.email.trim().toLowerCase());
+      if (normalizedEmail) {
+        checkoutUrl.searchParams.set("checkout[email]", normalizedEmail);
+      }
       checkoutUrl.searchParams.set("utm_source", "digital-shrine");
       checkoutUrl.searchParams.set("utm_medium", "app");
       checkoutUrl.searchParams.set("utm_campaign", "pack");
