@@ -145,6 +145,20 @@ function getConfiguredProvider(): MerchantOfRecordProvider {
     return provider;
   }
 
+  const gumroadFallbackLinks = [
+    import.meta.env.VITE_GUMROAD_UNLOCK_ALL_URL,
+    import.meta.env.VITE_GUMROAD_UNLOCK_MAZU_URL,
+    import.meta.env.VITE_GUMROAD_UNLOCK_WENCHANG_URL,
+    import.meta.env.VITE_GUMROAD_UNLOCK_YUELAO_URL,
+    import.meta.env.VITE_GUMROAD_UNLOCK_CAISHEN_URL,
+    import.meta.env.VITE_GUMROAD_UNLOCK_GUANYIN_URL,
+    ...Object.values(GUMROAD_PUBLIC_CHECKOUT_LINKS)
+  ];
+
+  if (gumroadFallbackLinks.some((link) => Boolean(link?.trim()))) {
+    return "gumroad";
+  }
+
   return "manual_waitlist";
 }
 
