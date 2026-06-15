@@ -184,7 +184,7 @@ function getProviderReadiness(): ProviderReadiness {
   if (provider === "gumroad") {
     return {
       provider,
-      mode: import.meta.env.VITE_PAYMENT_LINK_MODE === "live" ? "live" : "launch_prep",
+      mode: hasConfiguredCheckoutUrl(provider) ? "live" : "launch_prep",
       recommendedForMainlandChinaSolo: true,
       summary:
         "Practical launch path for a mainland China solo founder: simple digital-product checkout, easy public links, and fast validation while the full website remains the real product experience."
@@ -390,26 +390,43 @@ export function createRemoteCommerceGateway(): CommerceGateway {
     },
 
     async createPackCheckoutSession(input) {
-      const session = (await postRemoteGateway({
-        action: "create_pack_checkout_session",
-        input
-      })) as CheckoutSession;
+      const configuredProvider = getConfiguredProvider();
 
-      if (session.provider === "gumroad" && session.status === "pending") {
+      if (configuredProvider === "gumroad") {
+        let remoteSession: CheckoutSession | null = null;
+
+        try {
+          remoteSession = (await postRemoteGateway({
+            action: "create_pack_checkout_session",
+            input
+          })) as CheckoutSession;
+        } catch {
+          remoteSession = null;
+        }
+
+        const sessionId = remoteSession?.sessionId ?? createSessionId("pack");
+
         return {
-          ...session,
+          sessionId,
+          provider: "gumroad",
+          mode: "pack",
           redirectUrl: createHostedCheckoutUrl({
             email: input.email,
             priceLabel: input.priceLabel,
-            sessionId: session.sessionId,
+            sessionId,
             guardian: input.guardian,
             title: input.title,
-            provider: session.provider
-          })
+            provider: "gumroad"
+          }),
+          status: "pending",
+          message: "Hosted checkout session created."
         };
       }
 
-      return session;
+      return (await postRemoteGateway({
+        action: "create_pack_checkout_session",
+        input
+      })) as CheckoutSession;
     },
 
     async getCheckoutSessionStatus(sessionId) {
