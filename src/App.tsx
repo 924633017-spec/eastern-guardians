@@ -2895,7 +2895,7 @@ function App() {
     setPackCheckoutStep("details");
   };
 
-  const isDirectGumroadLaunch = providerReadiness.provider === "gumroad" && providerReadiness.mode === "live";
+  const isDirectGumroadLaunch = providerReadiness.provider === "gumroad";
 
   const applyCommerceEntitlements = (nextMembershipTier = effectiveMembershipTier, nextUnlockedPacks = effectiveUnlockedPacks) => {
     setProfile((current) => ({
