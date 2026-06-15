@@ -457,7 +457,8 @@ const server = http.createServer(async (req, res) => {
     req.on("end", () => {
       try {
         const params = new URLSearchParams(body);
-        const secret = String(params.get("secret") || "").trim();
+        const requestUrl = new URL(req.url || "/gumroad/webhook", `http://${req.headers.host || "localhost"}`);
+        const secret = String(params.get("secret") || requestUrl.searchParams.get("secret") || "").trim();
         if (GUMROAD_WEBHOOK_SECRET && secret !== GUMROAD_WEBHOOK_SECRET) {
           json(res, 403, { error: "Invalid Gumroad webhook secret" });
           return;
