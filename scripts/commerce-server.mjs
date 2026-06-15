@@ -19,16 +19,9 @@ function createId(prefix) {
   return `${prefix}_${Math.random().toString(36).slice(2, 10)}_${Date.now().toString(36)}`;
 }
 
-function addDaysIso(days) {
-  const date = new Date();
-  date.setDate(date.getDate() + days);
-  return date.toISOString();
-}
-
 function createDefaultState() {
   return {
     account: null,
-    subscription: null,
     orders: [],
     analyticsEvents: [],
     checkoutSessions: []
@@ -45,7 +38,7 @@ function normalizeCheckoutSessions(value) {
     .map((session) => ({
       sessionId: String(session.sessionId || "").trim(),
       provider: String(session.provider || "").trim() || "manual_waitlist",
-      mode: session.mode === "subscription" ? "subscription" : "pack",
+      mode: "pack",
       email: String(session.email || "").trim().toLowerCase(),
       title: String(session.title || "").trim(),
       guardian: typeof session.guardian === "string" ? session.guardian : undefined,
@@ -77,8 +70,11 @@ function readState() {
   try {
     const parsed = JSON.parse(readFileSync(STORE_PATH, "utf8"));
     return {
-      ...createDefaultState(),
-      ...parsed,
+      account: parsed?.account ?? null,
+      orders: Array.isArray(parsed?.orders)
+        ? parsed.orders.filter((order) => order && typeof order === "object" && order.kind === "pack")
+        : [],
+      analyticsEvents: Array.isArray(parsed?.analyticsEvents) ? parsed.analyticsEvents : [],
       checkoutSessions: normalizeCheckoutSessions(parsed?.checkoutSessions)
     };
   } catch {
@@ -145,49 +141,6 @@ function track(state, type, meta = {}) {
   };
 }
 
-function handleConfirmSubscription(state, input) {
-  const next = upsertAccount(state, input.email);
-  const startedAt = new Date().toISOString();
-  const renewalAt = addDaysIso(input.planId === "plus-annual" ? 365 : 30);
-  const tier = input.tier === "oracle" ? "oracle" : "plus";
-
-  return track(
-    {
-      ...next,
-      subscription: {
-        id: next.subscription?.id || createId("sub"),
-        email: String(input.email).trim().toLowerCase(),
-        tier,
-        planId: input.planId,
-        priceLabel: input.priceLabel,
-        startedAt,
-        renewalAt,
-        status: "active"
-      },
-      orders: [
-        ...next.orders,
-        {
-          id: createId("ord"),
-          email: String(input.email).trim().toLowerCase(),
-          kind: "subscription",
-          title: tier === "plus" ? "Guardian Plus" : "Oracle Circle",
-          priceLabel: input.priceLabel,
-          purchasedAt: startedAt,
-          status: "active",
-          planId: input.planId
-        }
-      ]
-    },
-    "checkout_confirmed",
-    {
-      provider: PROVIDER,
-      mode: "subscription",
-      tier,
-      planId: input.planId
-    }
-  );
-}
-
 function handleConfirmPack(state, input) {
   const next = upsertAccount(state, input.email);
   const purchasedAt = new Date().toISOString();
@@ -231,7 +184,7 @@ function handleConfirmPack(state, input) {
 function handleRestore(state, input) {
   const normalizedEmail = String(input.email || "").trim().toLowerCase();
   const matchingOrders = state.orders.filter((order) => order.email === normalizedEmail);
-  if (matchingOrders.length === 0 && state.subscription?.email !== normalizedEmail) {
+  if (matchingOrders.length === 0) {
     return state;
   }
 
@@ -381,23 +334,16 @@ function handleGumroadSale(state, payload) {
   );
 }
 
-function createSession(input, mode) {
-  const title =
-    mode === "subscription"
-      ? input.tier === "oracle"
-        ? "Oracle Circle"
-        : "Guardian Plus"
-      : input.title;
-
-  const sessionId = createId(mode === "subscription" ? "sub" : "pack");
+function createPackSession(input) {
+  const sessionId = createId("pack");
 
   return {
     sessionId,
     provider: PROVIDER,
-    mode,
-    redirectUrl: `/?checkout=success&mode=${mode}&email=${encodeURIComponent(
+    mode: "pack",
+    redirectUrl: `/?checkout=success&mode=pack&email=${encodeURIComponent(
       String(input.email).trim().toLowerCase()
-    )}&title=${encodeURIComponent(title)}&checkout_session=${encodeURIComponent(sessionId)}`,
+    )}&title=${encodeURIComponent(String(input.title || "").trim())}&checkout_session=${encodeURIComponent(sessionId)}`,
     status: PROVIDER === "manual_waitlist" ? "requires_manual_review" : "pending",
     message:
       PROVIDER === "manual_waitlist"
@@ -406,8 +352,8 @@ function createSession(input, mode) {
   };
 }
 
-function createPackSession(state, input) {
-  const session = createSession(input, "pack");
+function createTrackedPackSession(state, input) {
+  const session = createPackSession(input);
 
   if (PROVIDER !== "gumroad") {
     return { nextState: state, session };
@@ -512,19 +458,6 @@ const server = http.createServer(async (req, res) => {
           json(res, 200, next);
           return;
         }
-        case "create_subscription_checkout_session": {
-          const next = writeState(
-            track(state, "checkout_session_created", {
-              provider: PROVIDER,
-              mode: "subscription",
-              tier: payload.input?.tier || "plus",
-              planId: payload.input?.planId || "plus-monthly"
-            })
-          );
-          void next;
-          json(res, 200, createSession(payload.input || {}, "subscription"));
-          return;
-        }
         case "create_pack_checkout_session": {
           const trackedState = track(state, "checkout_session_created", {
             provider: PROVIDER,
@@ -532,14 +465,9 @@ const server = http.createServer(async (req, res) => {
             guardian: payload.input?.guardian || "Unknown",
             packTitle: payload.input?.title || "Untitled"
           });
-          const { nextState, session } = createPackSession(trackedState, payload.input || {});
+          const { nextState, session } = createTrackedPackSession(trackedState, payload.input || {});
           writeState(nextState);
           json(res, 200, session);
-          return;
-        }
-        case "confirm_subscription_checkout": {
-          const next = writeState(handleConfirmSubscription(state, payload.input || {}));
-          json(res, 200, next);
           return;
         }
         case "confirm_pack_checkout": {

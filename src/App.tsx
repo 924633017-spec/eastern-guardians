@@ -18,15 +18,12 @@ import {
 import { getDeityCutoutSrc, getDeityPosterSrc } from "./assets";
 import {
   CommerceState,
-  SubscriptionPlanId,
   createDefaultCommerceState,
   deriveCommerceEntitlements,
-  getBillingLabel,
   getPackPurchaseCount,
   getRecentCustomerEmail,
-  getSubscriptionAccessLabel,
-  getSubscriptionCount,
-  trackCommerceEvent
+  trackCommerceEvent,
+  validateCheckoutEmail
 } from "./commerce";
 import {
   CheckoutSession,
@@ -41,7 +38,6 @@ type ShrineProfile = {
   zodiac: string;
   intention: Intention;
   deityId: Deity["id"];
-  membershipTier: PremiumTier["id"];
   cardFinish: CardFinishId;
   unlockedPacks: string[];
   companions: CompanionStateByDeity;
@@ -125,15 +121,6 @@ type CardFinish = {
   textColor: string;
 };
 
-type PremiumTier = {
-  id: "free" | "plus" | "oracle";
-  name: string;
-  price: string;
-  badge: string;
-  highlight: string;
-  features: string[];
-};
-
 type RitualPack = {
   title: string;
   price: string;
@@ -151,8 +138,6 @@ type ConcernMatch = {
   summary: string;
 };
 
-type UpgradeTarget = "plus" | "oracle";
-type UpgradeStep = "overview" | "checkout";
 type PackCheckoutStep = "details" | "checkout";
 
 type StaticPageId = "trust" | "privacy" | "terms" | "refund";
@@ -165,6 +150,11 @@ type PendingGumroadCheckout = {
   createdAt: string;
 };
 
+type CheckoutIdentity = {
+  email: string;
+  source: "recent" | "restore";
+};
+
 const STORAGE_KEY = "digital-shrine-profile";
 const GUMROAD_PENDING_CHECKOUT_KEY = "digital-shrine-gumroad-pending-checkout";
 const commerceGateway = createCommerceGateway();
@@ -174,7 +164,11 @@ function getTodayKey() {
 }
 
 function getDefaultCheckoutEmail() {
-  return "hello@mythicguardian.app";
+  return "";
+}
+
+function normalizeCheckoutEmail(value: string) {
+  return value.trim().toLowerCase();
 }
 
 function wait(ms: number) {
@@ -235,6 +229,25 @@ function clearPendingGumroadCheckout(sessionId?: string) {
   if (!sessionId || pending.sessionId === sessionId) {
     localStorage.removeItem(GUMROAD_PENDING_CHECKOUT_KEY);
   }
+}
+
+function getCheckoutIdentityCandidates(restoreEmail: string, recentCommerceEmail: string) {
+  const candidates: CheckoutIdentity[] = [];
+  const recentEmail = normalizeCheckoutEmail(recentCommerceEmail);
+  const typedRestoreEmail = normalizeCheckoutEmail(restoreEmail);
+
+  if (validateCheckoutEmail(recentEmail)) {
+    candidates.push({ email: recentEmail, source: "recent" });
+  }
+
+  if (
+    validateCheckoutEmail(typedRestoreEmail) &&
+    !candidates.some((candidate) => candidate.email === typedRestoreEmail)
+  ) {
+    candidates.push({ email: typedRestoreEmail, source: "restore" });
+  }
+
+  return candidates;
 }
 
 function scrollToTop() {
@@ -302,7 +315,6 @@ const defaultProfile: ShrineProfile = {
   zodiac: "Pisces",
   intention: "healing",
   deityId: "guanyin",
-  membershipTier: "free",
   cardFinish: "standard",
   unlockedPacks: [],
   companions: createDefaultCompanions()
@@ -362,33 +374,6 @@ const compatibilityModes: { id: CompatibilityMode; label: string; description: s
     id: "creative",
     label: "Collaboration",
     description: "For shared work, creative tension, and how energy moves between two people."
-  }
-];
-
-const premiumTiers: PremiumTier[] = [
-  {
-    id: "free",
-    name: "Free Shrine",
-    price: "$0",
-    badge: "Start free",
-    highlight: "Meet your first guardian fast, get a strong first impression, and keep the experience easy to share.",
-    features: ["1 daily ritual", "First guardian reveal", "Basic share card"]
-  },
-  {
-    id: "plus",
-    name: "Circle Access",
-    price: "Opens later",
-    badge: "Later layer",
-    highlight: "A softer continuity layer for people who want their guardian to stay closer across the week.",
-    features: ["Deeper daily guidance", "Shared reflection depth", "Weekly guardian rhythm"]
-  },
-  {
-    id: "oracle",
-    name: "Archive Circle",
-    price: "Opens later",
-    badge: "Later archive",
-    highlight: "A deeper memory layer for people who want their full guardian path, keepsakes, and reflections held together.",
-    features: ["Long-form readings", "Full memory archive", "Collector editions"]
   }
 ];
 
@@ -1181,38 +1166,6 @@ function getMilestoneRewards(stats: { awakenedCount: number; totalBond: number }
   ];
 }
 
-function getPremiumBenefits(stats: { awakenedCount: number; totalBond: number; allAwakened: boolean }): PremiumBenefit[] {
-  return [
-    {
-      title: "Extended Forecast",
-      description: "Expand from a short constellation preview into a deeper multi-day guidance map.",
-      state: stats.totalBond >= 60 ? "unlocked" : "preview"
-    },
-    {
-      title: "Deep Memory Archive",
-      description: "Store a longer history of signals, intentions, keepsakes, and companion growth.",
-      state: stats.totalBond >= 120 ? "unlocked" : "preview"
-    },
-    {
-      title: "Collector Card Editions",
-      description: "Unlock rarer guardian card finishes, future seasonal skins, and premium share outputs.",
-      state: stats.allAwakened || stats.totalBond >= 180 ? "unlocked" : "preview"
-    }
-  ];
-}
-
-function getRecommendedTier(stats: { awakenedCount: number; totalBond: number }) {
-  if (stats.awakenedCount >= 3 || stats.totalBond >= 90) {
-    return "oracle";
-  }
-
-  if (stats.awakenedCount >= 1 || stats.totalBond >= 24) {
-    return "plus";
-  }
-
-  return "free";
-}
-
 function buildCompatibilityReading({
   profile,
   activeDeity,
@@ -1639,26 +1592,6 @@ function getGuidancePlaceholder(deity: Deity) {
   }
 }
 
-function getUpgradeOfferLine(target: UpgradeTarget) {
-  return target === "plus"
-    ? "Best if you want this guardian to stay close across the week, not disappear after one result."
-    : "Best if you want your full guardian path remembered, expanded, and held in a deeper archive.";
-}
-
-function getUpgradeImmediateUnlocks(target: UpgradeTarget) {
-  return target === "plus"
-    ? [
-        "Deeper daily guidance that grows more personal as you return",
-        "A fuller shared reflection layer when you want more emotional nuance",
-        "A weekly guardian rhythm with richer card finishes and more continuity"
-      ]
-    : [
-        "A full ritual archive with longer memory and signal history",
-        "Collector editions and prestige exports across your full guardian journey",
-        "Long-form interpretation for people who want a deeper, more memorable archive"
-      ];
-}
-
 function getRecommendedRitualPack(deity: Deity) {
   switch (deity.id) {
     case "guanyin":
@@ -1923,57 +1856,6 @@ function getUpgradeReasonNow(deity: Deity) {
   }
 }
 
-function getLaunchUpgradeAngle(deity: Deity, recommendedTier: PremiumTier["id"]) {
-  if (recommendedTier === "free") {
-    switch (deity.id) {
-      case "guanyin":
-        return "Keep Guanyin with you for a softer, steadier healing rhythm across the week.";
-      case "caishen":
-        return "Keep Caishen close when money pressure is not over and you want steadier support around your next steps.";
-      case "yuelao":
-        return "Keep Yuelao close when a connection needs more warmth, care, or repair.";
-      case "wenchang":
-        return "Keep Wenchang active when you want a clarity ritual you can return to all week.";
-      case "mazu":
-        return "Keep Mazu near when this crossing will not be solved in a single night.";
-      default:
-        return "Stay with this guardian longer if the first result already feels personal.";
-    }
-  }
-
-  if (recommendedTier === "plus") {
-    switch (deity.id) {
-      case "guanyin":
-        return "Circle Access fits best when emotional clarity is already your reason to come back.";
-      case "caishen":
-        return "Circle Access fits best when livelihood pressure keeps returning and you want a calmer prosperity ritual to come back to.";
-      case "yuelao":
-        return "Circle Access fits best when closeness and emotional reflection are bringing you back.";
-      case "wenchang":
-        return "Circle Access fits best when disciplined return is starting to become a habit.";
-      case "mazu":
-        return "Circle Access fits best when protection and transition both need a longer runway.";
-      default:
-        return "Circle Access fits best when each return deserves more depth.";
-    }
-  }
-
-  switch (deity.id) {
-    case "guanyin":
-      return "Archive Circle is for keeping Guanyin's full healing trail, not losing it after one session.";
-    case "caishen":
-      return "Archive Circle is for keeping your prosperity path, emotional pressure, and practical support trail in one place.";
-    case "yuelao":
-      return "Archive Circle is for keeping emotional memory and connection patterns in one place.";
-    case "wenchang":
-      return "Archive Circle is for turning progress, drafts, and discipline into a lasting archive.";
-    case "mazu":
-      return "Archive Circle is for long crossings that deserve memory, continuity, and keepsakes.";
-    default:
-      return "Archive Circle is for people who want the full archive, not just the latest reading.";
-  }
-}
-
 function buildWeeklyForecast(profile: ShrineProfile, primary: Deity, support: Deity, zodiacGuardian: Deity) {
   const focusPool = Array.from(new Set([...primary.watchwords, ...support.watchwords]));
   const guidePool = Array.from(new Map([primary, support, zodiacGuardian].map((deity) => [deity.id, deity])).values());
@@ -2006,9 +1888,6 @@ function App() {
   const [activeView, setActiveView] = useState<"landing" | "onboarding" | "shrine">("landing");
   const [staticPage, setStaticPage] = useState<StaticPageId | null>(null);
   const [shareMessage, setShareMessage] = useState("");
-  const [upgradeTarget, setUpgradeTarget] = useState<null | UpgradeTarget>(null);
-  const [upgradeStep, setUpgradeStep] = useState<UpgradeStep>("overview");
-  const [selectedPlanId, setSelectedPlanId] = useState<SubscriptionPlanId>("plus-monthly");
   const [selectedPack, setSelectedPack] = useState<null | RitualPack>(null);
   const [packCheckoutStep, setPackCheckoutStep] = useState<PackCheckoutStep>("details");
   const [restoreEmail, setRestoreEmail] = useState("");
@@ -2083,21 +1962,11 @@ function App() {
       return;
     }
 
-    const normalizedCheckoutEmail = checkoutEmail.trim().toLowerCase();
-    const pendingGumroadCheckout =
-      checkoutMode === "pack" && checkoutSessionId ? readPendingGumroadCheckout() : null;
-    const hasMatchingPendingGumroadCheckout =
-      checkoutProvider === "gumroad" &&
-      checkoutMode === "pack" &&
-      checkoutSessionId &&
-      pendingGumroadCheckout?.sessionId === checkoutSessionId &&
-      pendingGumroadCheckout.email === normalizedCheckoutEmail &&
-      pendingGumroadCheckout.title === checkoutTitle;
-
+    const normalizedCheckoutEmail = normalizeCheckoutEmail(checkoutEmail);
     if (
       checkoutMode === "pack" &&
       checkoutProvider === "gumroad" &&
-      !hasMatchingPendingGumroadCheckout
+      !validateCheckoutEmail(normalizedCheckoutEmail)
     ) {
       params.delete("checkout");
       params.delete("checkout_session");
@@ -2118,29 +1987,7 @@ function App() {
           : "Payment received. Unlocking your guardian now..."
       );
       try {
-        if (checkoutMode === "subscription") {
-          const inferredTarget = checkoutTitle === "Oracle Circle" ? "oracle" : "plus";
-          const planId =
-            inferredTarget === "oracle"
-              ? "oracle-monthly"
-              : selectedPlanId === "plus-annual"
-                ? "plus-annual"
-                : "plus-monthly";
-
-          const nextCommerceState = await commerceGateway.confirmSubscriptionCheckout({
-            email: normalizedCheckoutEmail,
-            tier: inferredTarget,
-            planId,
-            priceLabel: inferredTarget === "oracle" ? "$19/mo" : planId === "plus-annual" ? "$58/yr" : "$7/mo"
-          });
-          const nextEntitlements = deriveCommerceEntitlements(nextCommerceState);
-          setCommerceState(nextCommerceState);
-          applyCommerceEntitlements(nextEntitlements.membershipTier, nextEntitlements.unlockedPacks);
-          setRestoreEmail(normalizedCheckoutEmail);
-          setShareMessage(`Payment confirmed for ${normalizedCheckoutEmail}.`);
-          setCheckoutReturnState("success");
-          setCheckoutReturnMessage("Payment confirmed. Your access is now unlocked.");
-        } else if (checkoutMode === "pack" && checkoutTitle) {
+        if (checkoutMode === "pack" && checkoutTitle) {
           const pack = [...ritualPacks, allGuardiansPack].find((item) => item.title === checkoutTitle);
           if (!pack) {
             setCheckoutReturnState("error");
@@ -2151,16 +1998,16 @@ function App() {
           if (checkoutProvider === "gumroad" && checkoutSessionId) {
             let sessionCompleted = false;
 
-            for (let attempt = 0; attempt < 5; attempt += 1) {
+            for (let attempt = 0; attempt < 8; attempt += 1) {
               const sessionStatus = await commerceGateway.getCheckoutSessionStatus(checkoutSessionId);
               if (sessionStatus.found && sessionStatus.status === "completed") {
                 sessionCompleted = true;
                 break;
               }
 
-              if (attempt < 4) {
-                setCheckoutReturnMessage("Payment return detected. Waiting for Gumroad confirmation...");
-                await wait(1500);
+              if (attempt < 7) {
+                setCheckoutReturnMessage("Payment return detected. Waiting for Gumroad to finish confirming your unlock...");
+                await wait(2000);
               }
             }
 
@@ -2173,7 +2020,7 @@ function App() {
 
               if (restoredPackUnlocked) {
                 setCommerceState(restoredState);
-                applyCommerceEntitlements(restoredEntitlements.membershipTier, restoredEntitlements.unlockedPacks);
+                applyCommerceEntitlements(restoredEntitlements.unlockedPacks);
                 setRestoreEmail(normalizedCheckoutEmail);
                 setShareMessage(`${pack.title} confirmed for ${normalizedCheckoutEmail}.`);
                 setCheckoutReturnState("success");
@@ -2190,7 +2037,7 @@ function App() {
               setRestoreEmail(normalizedCheckoutEmail);
               setCheckoutReturnState("error");
               setCheckoutReturnMessage(
-                "We have not received Gumroad's payment confirmation yet. Please wait a moment, then tap Restore access with the same checkout email."
+                "Your payment may still be processing. Please wait a moment, then tap Restore access with the same checkout email if the unlock does not appear."
               );
               return;
             }
@@ -2204,7 +2051,7 @@ function App() {
           });
           const nextEntitlements = deriveCommerceEntitlements(nextCommerceState);
           setCommerceState(nextCommerceState);
-          applyCommerceEntitlements(nextEntitlements.membershipTier, nextEntitlements.unlockedPacks);
+          applyCommerceEntitlements(nextEntitlements.unlockedPacks);
           setRestoreEmail(normalizedCheckoutEmail);
           setShareMessage(`${pack.title} confirmed for ${normalizedCheckoutEmail}.`);
           setCheckoutReturnState("success");
@@ -2218,7 +2065,7 @@ function App() {
         setPendingCheckoutSession((current) => (current && checkoutSessionId && current.sessionId === checkoutSessionId ? null : current));
       } catch {
         setCheckoutReturnState("error");
-        setCheckoutReturnMessage("Payment returned, but unlock confirmation did not finish. Please tap restore access once.");
+        setCheckoutReturnMessage("Payment returned, but we could not finish the unlock yet. Tap Restore access with the same checkout email.");
       } finally {
         params.delete("checkout");
         params.delete("checkout_session");
@@ -2232,7 +2079,7 @@ function App() {
     }
 
     void confirmReturnedCheckout();
-  }, [selectedPlanId]);
+  }, []);
 
   useEffect(() => {
     if (!hasProfile) {
@@ -2262,7 +2109,6 @@ function App() {
     [viewedDeityId]
   );
   const commerceEntitlements = useMemo(() => deriveCommerceEntitlements(commerceState), [commerceState]);
-  const effectiveMembershipTier = commerceEntitlements.membershipTier;
   const effectiveUnlockedPacks = commerceEntitlements.unlockedPacks;
   const recentCommerceEmail = useMemo(() => getRecentCustomerEmail(commerceState), [commerceState]);
   const providerReadiness = useMemo(() => commerceGateway.getProviderReadiness(), []);
@@ -2387,8 +2233,6 @@ function App() {
   );
   const isViewingPrimaryGuardian = activeDeity.id === primaryDeity.id;
   const viralSignal = useMemo(() => getViralProfileSignal(profile, activeDeity), [activeDeity, profile]);
-  const guardianPlusTier = premiumTiers.find((tier) => tier.id === "plus") ?? premiumTiers[1];
-  const oracleTier = premiumTiers.find((tier) => tier.id === "oracle") ?? premiumTiers[2];
   const resultHeroLine = useMemo(() => {
     switch (activeDeity.id) {
       case "caishen":
@@ -2440,15 +2284,6 @@ function App() {
   const keepsakesLabel = useMemo(() => getKeepsakesLabel(activeDeity), [activeDeity]);
   const keepsakesEmptyLine = useMemo(() => getKeepsakesEmptyLine(activeDeity), [activeDeity]);
   const ritualStepLabels = useMemo(() => getRitualStepLabels(activeDeity), [activeDeity]);
-  const upgradeOfferLine = useMemo(
-    () => (upgradeTarget ? getUpgradeOfferLine(upgradeTarget) : getUpgradeOfferLine("plus")),
-    [upgradeTarget]
-  );
-  const upgradeImmediateUnlocks = useMemo(
-    () => getUpgradeImmediateUnlocks(upgradeTarget ?? "plus"),
-    [upgradeTarget]
-  );
-
   const latestWish = activeCompanion.wishes[0];
   const shareCardDeityImage = shareCardDeityImages[activeDeity.id] ?? "";
   const shareCardReady = Boolean(shareCardDeityImage);
@@ -2539,38 +2374,13 @@ function App() {
     () => getMilestoneRewards({ awakenedCount: journeyStats.awakenedCount, totalBond: journeyStats.totalBond }),
     [journeyStats.awakenedCount, journeyStats.totalBond]
   );
-  const premiumBenefits = useMemo(
-    () =>
-      getPremiumBenefits({
-        awakenedCount: journeyStats.awakenedCount,
-        totalBond: journeyStats.totalBond,
-        allAwakened: journeyStats.awakenedCount === deities.length
-      }),
-    [journeyStats.awakenedCount, journeyStats.totalBond]
-  );
-  const nextPremiumBenefit = useMemo(
-    () => premiumBenefits.find((benefit) => benefit.state === "preview") ?? null,
-    [premiumBenefits]
-  );
-  const recommendedTier = useMemo(
-    () => getRecommendedTier({ awakenedCount: journeyStats.awakenedCount, totalBond: journeyStats.totalBond }),
-    [journeyStats.awakenedCount, journeyStats.totalBond]
-  );
   const unlockedCardFinishes = useMemo(
     () => getUnlockedCardFinishes({ awakenedCount: journeyStats.awakenedCount, totalBond: journeyStats.totalBond }),
     [journeyStats.awakenedCount, journeyStats.totalBond]
   );
   const activeCardFinish = useMemo(() => getCardFinishById(profile.cardFinish), [profile.cardFinish]);
-  const premiumPaywallMessage = useMemo(() => {
-    return getLaunchUpgradeAngle(activeDeity, recommendedTier);
-  }, [activeDeity, recommendedTier]);
-  const hasGuardianPlus = effectiveMembershipTier === "plus" || effectiveMembershipTier === "oracle";
-  const hasOracleAccess = effectiveMembershipTier === "oracle";
-  const visibleWeeklyForecast = hasGuardianPlus ? weeklyForecast.slice(0, 3) : weeklyForecast.slice(0, 1);
-  const activeUpgradeTier = upgradeTarget === "oracle" ? oracleTier : guardianPlusTier;
   const shareCardIdentityLine = useMemo(() => getShareCardIdentityLine(activeDeity), [activeDeity]);
   const shareCardCollectibleLabel = useMemo(() => getShareCardCollectibleLabel(activeDeity), [activeDeity]);
-  const upgradeReasonNow = useMemo(() => getUpgradeReasonNow(activeDeity), [activeDeity]);
   const recommendedPack = useMemo(() => getRecommendedRitualPack(activeDeity), [activeDeity]);
   const allGuardiansUnlocked = useMemo(
     () => hasAllGuardiansUnlocked(effectiveUnlockedPacks),
@@ -2696,10 +2506,7 @@ function App() {
       })),
     [activeCompanion.ritualHistory, activeDeity]
   );
-  const visibleRecentHistory = useMemo(
-    () => (hasOracleAccess ? recentHistory : recentHistory.slice(0, 1)),
-    [hasOracleAccess, recentHistory]
-  );
+  const visibleRecentHistory = useMemo(() => recentHistory.slice(0, 1), [recentHistory]);
   const compatibilityBirthDateError = useMemo(() => {
     if (!compatibilityBirthDate || parseBirthDate(compatibilityBirthDate)) {
       return "";
@@ -2870,22 +2677,6 @@ function App() {
     scrollToTop();
   };
 
-  const openUpgradeSheet = (target: UpgradeTarget) => {
-    void commerceGateway.track("upgrade_sheet_opened", {
-      target
-    }).then((state) => {
-      setCommerceState(state);
-    });
-    setUpgradeTarget(target);
-    setUpgradeStep("overview");
-    setSelectedPlanId(target === "plus" ? "plus-monthly" : "oracle-monthly");
-  };
-
-  const closeUpgradeSheet = () => {
-    setUpgradeTarget(null);
-    setUpgradeStep("overview");
-  };
-
   const openPackSheet = (pack: RitualPack) => {
     void commerceGateway.track("pack_sheet_opened", {
       packTitle: pack.title,
@@ -2903,56 +2694,27 @@ function App() {
   };
 
   const isDirectGumroadLaunch = providerReadiness.provider === "gumroad";
+  const checkoutIdentityCandidates = useMemo(
+    () => getCheckoutIdentityCandidates(restoreEmail, recentCommerceEmail),
+    [recentCommerceEmail, restoreEmail]
+  );
+  const activeCheckoutEmail = checkoutIdentityCandidates[0]?.email ?? "";
 
-  const applyCommerceEntitlements = (nextMembershipTier = effectiveMembershipTier, nextUnlockedPacks = effectiveUnlockedPacks) => {
+  const applyCommerceEntitlements = (nextUnlockedPacks = effectiveUnlockedPacks) => {
     setProfile((current) => ({
       ...current,
-      membershipTier: nextMembershipTier,
       unlockedPacks: nextUnlockedPacks
     }));
   };
 
-  const handleStartCheckout = () => {
-    setUpgradeStep("checkout");
-    void commerceGateway.track("checkout_started", {
-      target: upgradeTarget ?? "plus",
-      planId: selectedPlanId
-    }).then((state) => {
-      setCommerceState(state);
-    });
-  };
-
-  const handleActivateSubscription = async () => {
-    if (!upgradeTarget) {
-      return;
-    }
-
-    const nextTier = upgradeTarget === "oracle" ? "oracle" : "plus";
-    const checkoutEmail = recentCommerceEmail || restoreEmail || getDefaultCheckoutEmail();
-    const session = await commerceGateway.createSubscriptionCheckoutSession({
-      email: checkoutEmail,
-      tier: nextTier,
-      planId: selectedPlanId,
-      priceLabel: activeUpgradeTier.price
-    });
-    setPendingCheckoutSession(session);
-    setCheckoutReturnState("idle");
-    setCheckoutReturnMessage("");
-    setRestoreEmail(checkoutEmail.trim().toLowerCase());
-    setShareMessage(
-      session.status === "requires_manual_review"
-        ? "Launch list captured. Turn on a live payout route before charging this buyer."
-        : "Opening secure checkout. After payment, access returns here."
-    );
-    if (session.status === "pending" && session.redirectUrl) {
-      window.location.href = session.redirectUrl;
-      return;
-    }
-    closeUpgradeSheet();
-  };
-
   const startPackCheckout = async (pack: RitualPack, options?: { closeSheet?: boolean }) => {
-    const checkoutEmail = recentCommerceEmail || restoreEmail || getDefaultCheckoutEmail();
+    const checkoutEmail = activeCheckoutEmail;
+    if (!validateCheckoutEmail(checkoutEmail)) {
+      setCheckoutReturnState("error");
+      setCheckoutReturnMessage("Enter a valid restore email before checkout so we can return this unlock to you.");
+      setShareMessage("Add your email first so this paid unlock can be restored correctly.");
+      return;
+    }
     const session = await commerceGateway.createPackCheckoutSession({
       email: checkoutEmail,
       title: pack.title,
@@ -3047,7 +2809,6 @@ function App() {
         setCommerceState(restoredState);
         setProfile((current) => ({
           ...current,
-          membershipTier: nextEntitlements.membershipTier,
           unlockedPacks: nextEntitlements.unlockedPacks
         }));
         setRestoreEmail(pending.email);
@@ -3076,7 +2837,13 @@ function App() {
   }, [providerReadiness.provider, allGuardiansPack.title]);
 
   const handleRestorePurchases = async () => {
-    const recoveryEmail = restoreEmail || recentCommerceEmail || getDefaultCheckoutEmail();
+    const recoveryEmail = activeCheckoutEmail;
+    if (!validateCheckoutEmail(recoveryEmail)) {
+      setCheckoutReturnState("error");
+      setCheckoutReturnMessage("Enter the checkout email first, then tap Restore access.");
+      setShareMessage("A valid checkout email is required before restore can work.");
+      return;
+    }
 
     const restoredState = await commerceGateway.restorePurchases({
       email: recoveryEmail
@@ -3084,16 +2851,15 @@ function App() {
     const nextEntitlements = deriveCommerceEntitlements(restoredState);
 
     setCommerceState(restoredState);
-    applyCommerceEntitlements(nextEntitlements.membershipTier, nextEntitlements.unlockedPacks);
+    applyCommerceEntitlements(nextEntitlements.unlockedPacks);
     setRestoreEmail(recoveryEmail.trim().toLowerCase());
     if (
       providerReadiness.provider === "gumroad" &&
-      nextEntitlements.membershipTier === effectiveMembershipTier &&
       nextEntitlements.unlockedPacks.length === effectiveUnlockedPacks.length
     ) {
-      setShareMessage("No verified Gumroad unlock was found on this browser yet.");
+      setShareMessage("No paid unlock was found yet for that email.");
       setCheckoutReturnState("error");
-      setCheckoutReturnMessage("Gumroad payment verification for automatic unlock is not fully connected yet in this launch build.");
+      setCheckoutReturnMessage("We could not find a completed paid unlock for that email yet. If you just paid, wait a moment and try Restore access again.");
       return;
     }
 
@@ -3735,7 +3501,20 @@ function App() {
                 <div className="checkout-urgency-note commerce-status-grid">
                   <span>Checkout</span>
                   <strong>Pay on Gumroad, then come back here with the same email.</strong>
-                  <small className="checkout-helper-line">Current restore email: {restoreEmail || recentCommerceEmail || getDefaultCheckoutEmail()}</small>
+                  <input
+                    className="checkout-field"
+                    type="email"
+                    inputMode="email"
+                    autoComplete="email"
+                    placeholder="Enter your checkout email"
+                    value={restoreEmail}
+                    onChange={(event) => setRestoreEmail(normalizeCheckoutEmail(event.target.value))}
+                  />
+                  <small className="checkout-helper-line">
+                    {validateCheckoutEmail(activeCheckoutEmail)
+                      ? `Checkout email: ${activeCheckoutEmail}`
+                      : "Enter the email you will use on Gumroad so unlock and restore work reliably."}
+                  </small>
                   <button className="ghost-button commerce-restore-button" onClick={() => void handleRestorePurchases()}>
                     Restore access
                   </button>
@@ -3876,7 +3655,20 @@ function App() {
                   <div className="checkout-urgency-note">
                     <span>Restore access</span>
                     <strong>Use the same Gumroad email if you need to pull the unlock back into your shrine.</strong>
-                    <small className="checkout-helper-line">Current restore email: {restoreEmail || recentCommerceEmail || getDefaultCheckoutEmail()}</small>
+                    <input
+                      className="checkout-field"
+                      type="email"
+                      inputMode="email"
+                      autoComplete="email"
+                      placeholder="Enter your checkout email"
+                      value={restoreEmail}
+                      onChange={(event) => setRestoreEmail(normalizeCheckoutEmail(event.target.value))}
+                    />
+                    <small className="checkout-helper-line">
+                      {validateCheckoutEmail(activeCheckoutEmail)
+                        ? `Checkout email: ${activeCheckoutEmail}`
+                        : "Use the same email on Gumroad and here so your paid unlock can be restored correctly."}
+                    </small>
                   </div>
                 ) : null}
                 <div className="upgrade-sheet-benefits">

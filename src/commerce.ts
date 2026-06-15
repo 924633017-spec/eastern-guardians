@@ -1,27 +1,12 @@
-export type CommerceMembershipTier = "free" | "plus" | "oracle";
+export type OrderKind = "pack";
 
-export type SubscriptionPlanId = "plus-monthly" | "plus-annual" | "oracle-monthly";
-
-export type OrderKind = "subscription" | "pack";
-
-export type OrderStatus = "active" | "fulfilled" | "canceled";
+export type OrderStatus = "fulfilled" | "canceled";
 
 export type CommerceAccount = {
   id: string;
   email: string;
   createdAt: string;
   lastSeenAt: string;
-};
-
-export type CommerceSubscription = {
-  id: string;
-  email: string;
-  tier: Exclude<CommerceMembershipTier, "free">;
-  planId: SubscriptionPlanId;
-  priceLabel: string;
-  startedAt: string;
-  renewalAt: string;
-  status: "active" | "canceled";
 };
 
 export type CommerceOrder = {
@@ -33,7 +18,6 @@ export type CommerceOrder = {
   guardian?: string;
   purchasedAt: string;
   status: OrderStatus;
-  planId?: SubscriptionPlanId;
 };
 
 export type AnalyticsEvent = {
@@ -45,21 +29,12 @@ export type AnalyticsEvent = {
 
 export type CommerceState = {
   account: CommerceAccount | null;
-  subscription: CommerceSubscription | null;
   orders: CommerceOrder[];
   analyticsEvents: AnalyticsEvent[];
 };
 
 export type CommerceEntitlements = {
-  membershipTier: CommerceMembershipTier;
   unlockedPacks: string[];
-};
-
-type SubscriptionInput = {
-  email: string;
-  tier: Exclude<CommerceMembershipTier, "free">;
-  planId: SubscriptionPlanId;
-  priceLabel: string;
 };
 
 type PackPurchaseInput = {
@@ -85,12 +60,6 @@ function normalizeStringArray(value: unknown) {
   }
 
   return value.filter((item): item is string => typeof item === "string");
-}
-
-function addDaysIso(days: number) {
-  const date = new Date();
-  date.setDate(date.getDate() + days);
-  return date.toISOString();
 }
 
 function upsertAccount(current: CommerceState, email: string) {
@@ -121,7 +90,6 @@ function upsertAccount(current: CommerceState, email: string) {
 export function createDefaultCommerceState(): CommerceState {
   return {
     account: null,
-    subscription: null,
     orders: [],
     analyticsEvents: []
   };
@@ -152,58 +120,18 @@ export function normalizeCommerceState(raw: unknown): CommerceState {
         }
       : null;
 
-  const subscription =
-    candidate.subscription &&
-    typeof candidate.subscription === "object" &&
-    typeof candidate.subscription.email === "string" &&
-    (candidate.subscription.tier === "plus" || candidate.subscription.tier === "oracle")
-      ? {
-          id:
-            typeof candidate.subscription.id === "string" && candidate.subscription.id
-              ? candidate.subscription.id
-              : createId("sub"),
-          email: candidate.subscription.email.trim().toLowerCase(),
-          tier: candidate.subscription.tier,
-          planId: (
-            candidate.subscription.planId === "plus-annual" ||
-            candidate.subscription.planId === "oracle-monthly"
-              ? candidate.subscription.planId
-              : "plus-monthly"
-          ) as SubscriptionPlanId,
-          priceLabel:
-            typeof candidate.subscription.priceLabel === "string" && candidate.subscription.priceLabel
-              ? candidate.subscription.priceLabel
-              : "",
-          startedAt: isValidDate(candidate.subscription.startedAt)
-            ? candidate.subscription.startedAt
-            : new Date().toISOString(),
-          renewalAt: isValidDate(candidate.subscription.renewalAt)
-            ? candidate.subscription.renewalAt
-            : addDaysIso(30),
-          status: (candidate.subscription.status === "canceled" ? "canceled" : "active") as
-            | "active"
-            | "canceled"
-        }
-      : null;
-
   const orders = Array.isArray(candidate.orders)
     ? candidate.orders
         .filter((order): order is CommerceOrder => Boolean(order && typeof order === "object"))
         .map((order) => ({
           id: typeof order.id === "string" && order.id ? order.id : createId("ord"),
           email: typeof order.email === "string" ? order.email.trim().toLowerCase() : "",
-          kind: (order.kind === "pack" ? "pack" : "subscription") as OrderKind,
+          kind: "pack" as OrderKind,
           title: typeof order.title === "string" ? order.title : "Untitled",
           priceLabel: typeof order.priceLabel === "string" ? order.priceLabel : "",
           guardian: typeof order.guardian === "string" ? order.guardian : undefined,
           purchasedAt: isValidDate(order.purchasedAt) ? order.purchasedAt : new Date().toISOString(),
-          status: (
-            order.status === "canceled" ? "canceled" : order.status === "fulfilled" ? "fulfilled" : "active"
-          ) as OrderStatus,
-          planId:
-            order.planId === "plus-monthly" || order.planId === "plus-annual" || order.planId === "oracle-monthly"
-              ? order.planId
-              : undefined
+          status: (order.status === "canceled" ? "canceled" : "fulfilled") as OrderStatus
         }))
     : [];
 
@@ -229,7 +157,6 @@ export function normalizeCommerceState(raw: unknown): CommerceState {
 
   return {
     account,
-    subscription,
     orders,
     analyticsEvents
   };
@@ -240,8 +167,6 @@ export function validateCheckoutEmail(email: string) {
 }
 
 export function deriveCommerceEntitlements(state: CommerceState): CommerceEntitlements {
-  const membershipTier =
-    state.subscription?.status === "active" ? state.subscription.tier : "free";
   const unlockedPacks = Array.from(
     new Set(
       state.orders
@@ -251,7 +176,6 @@ export function deriveCommerceEntitlements(state: CommerceState): CommerceEntitl
   );
 
   return {
-    membershipTier,
     unlockedPacks
   };
 }
@@ -272,39 +196,6 @@ export function trackCommerceEvent(
         meta
       }
     ].slice(-MAX_ANALYTICS_EVENTS)
-  };
-}
-
-export function activateSubscription(state: CommerceState, input: SubscriptionInput): CommerceState {
-  const nextState = upsertAccount(state, input.email);
-  const startedAt = new Date().toISOString();
-  const renewalAt = addDaysIso(input.planId === "plus-annual" ? 365 : 30);
-
-  return {
-    ...nextState,
-    subscription: {
-      id: nextState.subscription?.id ?? createId("sub"),
-      email: input.email.trim().toLowerCase(),
-      tier: input.tier,
-      planId: input.planId,
-      priceLabel: input.priceLabel,
-      startedAt,
-      renewalAt,
-      status: "active"
-    },
-    orders: [
-      ...nextState.orders,
-      {
-        id: createId("ord"),
-        email: input.email.trim().toLowerCase(),
-        kind: "subscription",
-        title: input.tier === "plus" ? "Guardian Plus" : "Oracle Circle",
-        priceLabel: input.priceLabel,
-        purchasedAt: startedAt,
-        status: "active",
-        planId: input.planId
-      }
-    ]
   };
 }
 
@@ -345,29 +236,12 @@ export function unlockPackPurchase(state: CommerceState, input: PackPurchaseInpu
 export function restoreCommerceAccount(state: CommerceState, email: string) {
   const normalizedEmail = email.trim().toLowerCase();
   const matchingOrderExists = state.orders.some((order) => order.email === normalizedEmail);
-  const matchingSubscriptionExists = state.subscription?.email === normalizedEmail;
 
-  if (!matchingOrderExists && !matchingSubscriptionExists) {
+  if (!matchingOrderExists) {
     return state;
   }
 
   return upsertAccount(state, normalizedEmail);
-}
-
-export function getBillingLabel(planId: SubscriptionPlanId) {
-  if (planId === "plus-annual") {
-    return "Annual billing";
-  }
-
-  return "Monthly billing";
-}
-
-export function getSubscriptionAccessLabel(planId: SubscriptionPlanId) {
-  if (planId === "oracle-monthly") {
-    return "Archive + collector continuity";
-  }
-
-  return "Continuity + shared reflection";
 }
 
 export function getRecentCustomerEmail(state: CommerceState) {
@@ -387,10 +261,6 @@ export function getPackTitlesForEmail(state: CommerceState, email: string) {
         .map((order) => order.title)
     )
   );
-}
-
-export function getSubscriptionCount(state: CommerceState) {
-  return state.orders.filter((order) => order.kind === "subscription").length;
 }
 
 export function getPackPurchaseCount(state: CommerceState) {

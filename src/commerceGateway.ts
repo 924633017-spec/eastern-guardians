@@ -1,7 +1,5 @@
 import {
   CommerceState,
-  SubscriptionPlanId,
-  activateSubscription,
   createDefaultCommerceState,
   normalizeCommerceState,
   restoreCommerceAccount,
@@ -10,13 +8,6 @@ import {
 } from "./commerce";
 
 export type MerchantOfRecordProvider = "paypal" | "paddle" | "lemonsqueezy" | "gumroad" | "manual_waitlist";
-
-export type SubscriptionCheckoutRequest = {
-  email: string;
-  tier: "plus" | "oracle";
-  planId: SubscriptionPlanId;
-  priceLabel: string;
-};
 
 export type PackCheckoutRequest = {
   email: string;
@@ -36,7 +27,7 @@ export type CheckoutSessionStatusRequest = {
 export type CheckoutSession = {
   sessionId: string;
   provider: MerchantOfRecordProvider;
-  mode: "subscription" | "pack";
+  mode: "pack";
   redirectUrl: string;
   status: "pending" | "requires_manual_review" | "completed";
   message: string;
@@ -48,7 +39,7 @@ export type CheckoutSessionStatus = {
   session?: {
     sessionId: string;
     provider: MerchantOfRecordProvider;
-    mode: "subscription" | "pack";
+    mode: "pack";
     email: string;
     title: string;
     guardian?: string;
@@ -68,10 +59,8 @@ export type ProviderReadiness = {
 
 export type CommerceGateway = {
   load(): Promise<CommerceState>;
-  createSubscriptionCheckoutSession(input: SubscriptionCheckoutRequest): Promise<CheckoutSession>;
   createPackCheckoutSession(input: PackCheckoutRequest): Promise<CheckoutSession>;
   getCheckoutSessionStatus(sessionId: string): Promise<CheckoutSessionStatus>;
-  confirmSubscriptionCheckout(input: SubscriptionCheckoutRequest): Promise<CommerceState>;
   confirmPackCheckout(input: PackCheckoutRequest): Promise<CommerceState>;
   restorePurchases(input: RestorePurchasesRequest): Promise<CommerceState>;
   track(type: string, meta?: Record<string, string>): Promise<CommerceState>;
@@ -84,19 +73,13 @@ type RemoteGatewayPayload = {
   action:
     | "load"
     | "track"
-    | "create_subscription_checkout_session"
     | "create_pack_checkout_session"
     | "get_checkout_session_status"
-    | "confirm_subscription_checkout"
     | "confirm_pack_checkout"
     | "restore_purchases";
   type?: string;
   meta?: Record<string, string>;
-  input?:
-    | SubscriptionCheckoutRequest
-    | PackCheckoutRequest
-    | RestorePurchasesRequest
-    | CheckoutSessionStatusRequest;
+  input?: PackCheckoutRequest | RestorePurchasesRequest | CheckoutSessionStatusRequest;
 };
 
 function createSessionId(prefix: string) {
@@ -218,7 +201,6 @@ function getProviderReadiness(): ProviderReadiness {
 }
 
 function createHostedCheckoutUrl(params: {
-  mode: "subscription" | "pack";
   email: string;
   priceLabel: string;
   sessionId: string;
@@ -230,7 +212,7 @@ function createHostedCheckoutUrl(params: {
   returnUrl.searchParams.set("checkout", "success");
   returnUrl.searchParams.set("checkout_session", params.sessionId);
   returnUrl.searchParams.set("provider", params.provider);
-  returnUrl.searchParams.set("mode", params.mode);
+  returnUrl.searchParams.set("mode", "pack");
   returnUrl.searchParams.set("email", params.email.trim().toLowerCase());
   returnUrl.searchParams.set("title", params.title);
 
@@ -260,7 +242,7 @@ function createHostedCheckoutUrl(params: {
       checkoutUrl.searchParams.set("email", params.email.trim().toLowerCase());
       checkoutUrl.searchParams.set("utm_source", "eastern-guardians");
       checkoutUrl.searchParams.set("utm_medium", "app");
-      checkoutUrl.searchParams.set("utm_campaign", params.mode);
+      checkoutUrl.searchParams.set("utm_campaign", "pack");
       checkoutUrl.searchParams.set("item_name", params.title);
       checkoutUrl.searchParams.set("custom", returnUrl.toString());
     } else if (params.provider === "gumroad") {
@@ -272,7 +254,7 @@ function createHostedCheckoutUrl(params: {
       checkoutUrl.searchParams.set("checkout[email]", params.email.trim().toLowerCase());
       checkoutUrl.searchParams.set("utm_source", "digital-shrine");
       checkoutUrl.searchParams.set("utm_medium", "app");
-      checkoutUrl.searchParams.set("utm_campaign", params.mode);
+      checkoutUrl.searchParams.set("utm_campaign", "pack");
       checkoutUrl.searchParams.set("checkout[custom][ritual_title]", params.title);
       checkoutUrl.searchParams.set("checkout[custom][price_label]", params.priceLabel);
       checkoutUrl.searchParams.set("checkout[custom][return_to]", returnUrl.toString());
@@ -326,38 +308,6 @@ export function createLocalCommerceGateway(): CommerceGateway {
       return readStoredCommerce();
     },
 
-    async createSubscriptionCheckoutSession(input) {
-      const provider = getConfiguredProvider();
-      const checkoutReady = hasConfiguredCheckoutUrl(provider);
-      const sessionId = createSessionId("sub");
-      const nextState = trackCommerceEvent(readStoredCommerce(), "checkout_session_created", {
-        provider,
-        mode: "subscription",
-        tier: input.tier,
-        planId: input.planId
-      });
-      persistCommerce(nextState);
-
-      return {
-        sessionId,
-        provider,
-        mode: "subscription",
-        redirectUrl: createHostedCheckoutUrl({
-          mode: "subscription",
-          email: input.email,
-          priceLabel: input.priceLabel,
-          sessionId,
-          title: input.tier === "plus" ? "Guardian Plus" : "Oracle Circle",
-          provider
-        }),
-        status: !checkoutReady ? "requires_manual_review" : "pending",
-        message:
-          !checkoutReady
-            ? "Live checkout is not configured yet. Add a verified checkout URL before charging this buyer."
-            : "Hosted checkout session created."
-      };
-    },
-
     async createPackCheckoutSession(input) {
       const provider = getConfiguredProvider();
       const checkoutReady = hasConfiguredCheckoutUrl(provider);
@@ -375,7 +325,6 @@ export function createLocalCommerceGateway(): CommerceGateway {
         provider,
         mode: "pack",
         redirectUrl: createHostedCheckoutUrl({
-          mode: "pack",
           email: input.email,
           priceLabel: input.priceLabel,
           sessionId,
@@ -389,21 +338,6 @@ export function createLocalCommerceGateway(): CommerceGateway {
             ? "Live checkout is not configured yet. Add a verified checkout URL before fulfilling this unlock."
             : "Hosted checkout session created."
       };
-    },
-
-    async confirmSubscriptionCheckout(input) {
-      const nextState = trackCommerceEvent(
-        activateSubscription(readStoredCommerce(), input),
-        "checkout_confirmed",
-        {
-          provider: getConfiguredProvider(),
-          mode: "subscription",
-          tier: input.tier,
-          planId: input.planId
-        }
-      );
-
-      return persistCommerce(nextState);
     },
 
     async getCheckoutSessionStatus(sessionId) {
@@ -455,29 +389,6 @@ export function createRemoteCommerceGateway(): CommerceGateway {
       return normalizeCommerceState(await postRemoteGateway({ action: "load" }));
     },
 
-    async createSubscriptionCheckoutSession(input) {
-      const session = (await postRemoteGateway({
-        action: "create_subscription_checkout_session",
-        input
-      })) as CheckoutSession;
-
-      if (session.provider === "gumroad" && session.status === "pending") {
-        return {
-          ...session,
-          redirectUrl: createHostedCheckoutUrl({
-            mode: "subscription",
-            email: input.email,
-            priceLabel: input.priceLabel,
-            sessionId: session.sessionId,
-            title: input.tier === "plus" ? "Guardian Plus" : "Oracle Circle",
-            provider: session.provider
-          })
-        };
-      }
-
-      return session;
-    },
-
     async createPackCheckoutSession(input) {
       const session = (await postRemoteGateway({
         action: "create_pack_checkout_session",
@@ -488,7 +399,6 @@ export function createRemoteCommerceGateway(): CommerceGateway {
         return {
           ...session,
           redirectUrl: createHostedCheckoutUrl({
-            mode: "pack",
             email: input.email,
             priceLabel: input.priceLabel,
             sessionId: session.sessionId,
@@ -507,15 +417,6 @@ export function createRemoteCommerceGateway(): CommerceGateway {
         action: "get_checkout_session_status",
         input: { sessionId }
       }) as Promise<CheckoutSessionStatus>;
-    },
-
-    async confirmSubscriptionCheckout(input) {
-      return normalizeCommerceState(
-        await postRemoteGateway({
-          action: "confirm_subscription_checkout",
-          input
-        })
-      );
     },
 
     async confirmPackCheckout(input) {

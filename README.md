@@ -15,13 +15,11 @@ then this project should launch in this order:
 1. `Web/PWA only`
 2. `Cloudflare Pages` deployment
 3. `One-time ritual packs first`
-4. `Membership later`
-5. `PayPal payment link first, hosted checkout only after payout route is verified`
+4. `PayPal payment link first, hosted checkout only after payout route is verified`
 
 This means:
 
 - do not launch through the App Store first
-- do not make subscription the main payment path on day one
 - do not rely on direct Stripe merchant setup as your first assumption
 - do not activate live charging until your real payout route is confirmed
 
@@ -35,7 +33,7 @@ This means:
 
 ### Most likely to receive money
 
-- One-time packs are easier for first-time overseas buyers than a recurring subscription
+- One-time packs are easier for first-time overseas buyers than a more complex recurring product
 - They match the product's core behavior better: one current need, one specific guided pack
 - You need fewer moving parts to fulfill a one-time purchase well
 
@@ -43,7 +41,7 @@ This means:
 
 - Cloudflare Pages can host this static Vite build at very low cost
 - No app packaging, no app-store account costs, no mobile release overhead
-- No need to build full subscription lifecycle operations before first launch
+- No need to build a heavier recurring billing system before first launch
 
 ## Recommended commercial shape
 
@@ -53,23 +51,6 @@ This means:
 - free first ritual answer
 - one-time ritual packs as the main paid conversion
 - restore access by email
-- optional membership UI can remain in preview mode, but should not be the main CTA
-
-### Later version
-
-Only after the pack-first launch proves:
-
-- buyers are willing to pay
-- fulfillment feels good
-- payout route is stable
-- users actually return
-
-then add:
-
-- membership
-- archive retention
-- longer memory features
-- recurring billing
 
 ## Payment reality
 
@@ -161,10 +142,6 @@ VITE_PAYPAL_CHECKOUT_URL=https://www.paypal.com/ncp/payment/your-payment-link
 - verified hosted checkout
 - real order confirmation
 - webhook-based fulfillment
-
-### Phase 3
-
-- membership only if needed
 
 ## Current project direction
 

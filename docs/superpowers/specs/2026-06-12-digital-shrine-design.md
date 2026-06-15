@@ -185,7 +185,6 @@ Excluded:
 
 - accounts
 - cloud sync
-- subscriptions
 - payment
 - real AI chat backend
 - CMS
