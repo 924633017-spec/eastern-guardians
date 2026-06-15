@@ -427,17 +427,50 @@ export function createRemoteCommerceGateway(): CommerceGateway {
     },
 
     async createSubscriptionCheckoutSession(input) {
-      return postRemoteGateway({
+      const session = (await postRemoteGateway({
         action: "create_subscription_checkout_session",
         input
-      }) as Promise<CheckoutSession>;
+      })) as CheckoutSession;
+
+      if (session.provider === "gumroad" && session.status === "pending") {
+        return {
+          ...session,
+          redirectUrl: createHostedCheckoutUrl({
+            mode: "subscription",
+            email: input.email,
+            priceLabel: input.priceLabel,
+            sessionId: session.sessionId,
+            title: input.tier === "plus" ? "Guardian Plus" : "Oracle Circle",
+            provider: session.provider
+          })
+        };
+      }
+
+      return session;
     },
 
     async createPackCheckoutSession(input) {
-      return postRemoteGateway({
+      const session = (await postRemoteGateway({
         action: "create_pack_checkout_session",
         input
-      }) as Promise<CheckoutSession>;
+      })) as CheckoutSession;
+
+      if (session.provider === "gumroad" && session.status === "pending") {
+        return {
+          ...session,
+          redirectUrl: createHostedCheckoutUrl({
+            mode: "pack",
+            email: input.email,
+            priceLabel: input.priceLabel,
+            sessionId: session.sessionId,
+            guardian: input.guardian,
+            title: input.title,
+            provider: session.provider
+          })
+        };
+      }
+
+      return session;
     },
 
     async getCheckoutSessionStatus(sessionId) {
