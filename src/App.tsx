@@ -397,45 +397,45 @@ const ritualPacks: RitualPack[] = [
     title: "Unlock Guanyin",
     price: "$7.99",
     guardian: "Guanyin",
-    trigger: "For peace, healing, and emotional comfort",
-    promise: "Unlock Guanyin to keep this gentle blessing close.",
-    description: "Best when you want softness, health, relief, and a calm presence close by.",
+    trigger: "For healing and calm",
+    promise: "Keep Guanyin close.",
+    description: "For softness, relief, and emotional peace.",
     outcomes: ["Permanent guardian access", "Blessing card", "Personal shrine access"]
   },
   {
     title: "Unlock Caishen",
     price: "$7.99",
     guardian: "Caishen",
-    trigger: "For prosperity, confidence, and steadier support",
-    promise: "Unlock Caishen to keep this prosperity blessing close.",
-    description: "Best when you want abundance, steadier fortune, and a sense of support around work and money.",
+    trigger: "For money and momentum",
+    promise: "Keep Caishen close.",
+    description: "For prosperity, steadier luck, and support.",
     outcomes: ["Permanent guardian access", "Blessing card", "Personal shrine access"]
   },
   {
     title: "Unlock Yuelao",
     price: "$7.99",
     guardian: "Yuelao",
-    trigger: "For warmth, closeness, and emotional sincerity",
-    promise: "Unlock Yuelao to keep this blessing for connection close.",
-    description: "Best when you want love, warmth, repair, or a more open heart.",
+    trigger: "For love and connection",
+    promise: "Keep Yuelao close.",
+    description: "For warmth, honesty, and repair.",
     outcomes: ["Permanent guardian access", "Blessing card", "Personal shrine access"]
   },
   {
     title: "Unlock Wenchang",
     price: "$7.99",
     guardian: "Wenchang",
-    trigger: "For focus, study, and steady thought",
-    promise: "Unlock Wenchang to keep this clarity blessing close.",
-    description: "Best when you want concentration, discipline, and a calmer mind for study or work.",
+    trigger: "For focus and study",
+    promise: "Keep Wenchang close.",
+    description: "For clarity, discipline, and deep work.",
     outcomes: ["Permanent guardian access", "Blessing card", "Personal shrine access"]
   },
   {
     title: "Unlock Mazu",
     price: "$7.99",
     guardian: "Mazu",
-    trigger: "For protection, travel, and steadiness through change",
-    promise: "Unlock Mazu to keep this protection blessing close.",
-    description: "Best when you want safety, guidance, and a steadier feeling during transitions.",
+    trigger: "For protection and change",
+    promise: "Keep Mazu close.",
+    description: "For safe passage, guidance, and steadiness.",
     outcomes: ["Permanent guardian access", "Blessing card", "Personal shrine access"]
   }
 ];
@@ -444,9 +444,9 @@ const allGuardiansPack: RitualPack = {
   title: "Unlock All Guardians",
   price: "$19.99",
   guardian: "All guardians",
-  trigger: "For people who want the full Eastern Guardians collection at once",
-  promise: "Unlock all five guardians and keep every blessing path close.",
-  description: "Best when you want the full guardian set available from day one, without unlocking each one separately later.",
+  trigger: "For the full collection",
+  promise: "Keep all five guardians close.",
+  description: "Unlock every guardian in one purchase.",
   outcomes: [
     "Permanent access to all five guardians",
     "All blessing cards unlocked",
@@ -1026,34 +1026,34 @@ function analyzeConcern(concern: string, fallback: Intention): ConcernMatch {
 function getConcernDisplayLine(match: ConcernMatch, deity: Deity) {
   switch (match.intention) {
     case "wealth":
-      return "Wishing for steadier fortune, livelihood support, and relief from money pressure.";
+      return "Wishing for steadier money and support.";
     case "healing":
-      return "Wishing for healing, emotional relief, and a gentler inner climate.";
+      return "Wishing for healing and relief.";
     case "love":
-      return "Wishing for warmth, clarity, and a steadier connection with someone meaningful.";
+      return "Wishing for warmth and clearer connection.";
     case "focus":
-      return "Wishing for clarity, concentration, and steadier follow-through.";
+      return "Wishing for clarity and focus.";
     case "protection":
-      return "Wishing for protection, steadier passage, and calm through uncertainty.";
+      return "Wishing for protection and steadier passage.";
     default:
-      return `${deity.name} answered a wish that wants comfort and support.`;
+      return `${deity.name} answered a wish for comfort and support.`;
   }
 }
 
 function getRitualWishDisplayLine(deity: Deity) {
   switch (deity.id) {
     case "caishen":
-      return "Your wish for prosperity has been placed in your personal shrine.";
+      return "Your wish for prosperity is now in your shrine.";
     case "guanyin":
-      return "Your wish for peace and healing has been placed in your personal shrine.";
+      return "Your wish for healing is now in your shrine.";
     case "yuelao":
-      return "Your wish for warmth and connection has been placed in your personal shrine.";
+      return "Your wish for connection is now in your shrine.";
     case "wenchang":
-      return "Your wish for clarity and focus has been placed in your personal shrine.";
+      return "Your wish for focus is now in your shrine.";
     case "mazu":
-      return "Your wish for protection has been placed in your personal shrine.";
+      return "Your wish for protection is now in your shrine.";
     default:
-      return "Your wish has been placed in your personal shrine.";
+      return "Your wish is now in your shrine.";
   }
 }
 
@@ -1404,32 +1404,32 @@ function getActionPanelLabel(deity: Deity) {
 function getActionPanelSupportLine(deity: Deity) {
   switch (deity.id) {
     case "guanyin":
-      return "Keep this blessing close, or share it with someone who may need a little comfort.";
+      return "Keep this blessing, or share it.";
     case "caishen":
-      return "Keep this blessing close, or share it with someone who may need a little support.";
+      return "Keep this blessing, or share it.";
     case "yuelao":
-      return "Keep this blessing close, or share it with someone who may need a little warmth.";
+      return "Keep this blessing, or share it.";
     case "wenchang":
-      return "Keep this blessing close, or share it with someone who may need a little clarity.";
+      return "Keep this blessing, or share it.";
     case "mazu":
-      return "Keep this blessing close, or share it with someone who may need a little protection.";
+      return "Keep this blessing, or share it.";
     default:
-      return "Keep this blessing close, or share it with someone who may need it.";
+      return "Keep this blessing, or share it.";
   }
 }
 
 function getShareCardSpiritLine(deity: Deity) {
   switch (deity.id) {
     case "guanyin":
-      return "A soft guardian for healing, release, and emotional clarity.";
+      return "Healing, softness, and clarity.";
     case "caishen":
-      return "A golden guardian for prosperity, steadier fortune, and calmer courage under pressure.";
+      return "Prosperity, support, and courage.";
     case "yuelao":
-      return "A lantern guardian for warmth, honesty, and returned affection.";
+      return "Warmth, honesty, and connection.";
     case "wenchang":
-      return "A study guardian for discipline, craft, and follow-through.";
+      return "Clarity, discipline, and follow-through.";
     case "mazu":
-      return "A harbor guardian for protection, guidance, and steadier crossings.";
+      return "Protection, guidance, and safe passage.";
     default:
       return deity.essence;
   }
@@ -2349,7 +2349,7 @@ function App() {
   const recommendationReason = useMemo(() => {
     const selectedIntentionLabel =
       intentionOptions.find((option) => option.id === concernIntention)?.label ?? concernIntention;
-    return `${onboardingDeity.name} matches your current need for ${selectedIntentionLabel.toLowerCase()} and is the clearest guardian to invite right now.`;
+    return `${onboardingDeity.name} is the clearest match for ${selectedIntentionLabel.toLowerCase()} right now.`;
   }, [concernIntention, onboardingDeity.name]);
 
   const oracle = useMemo(
@@ -2392,15 +2392,15 @@ function App() {
   const resultHeroLine = useMemo(() => {
     switch (activeDeity.id) {
       case "caishen":
-        return "Let prosperity, support, and steadier luck stay a little closer today.";
+        return "Let prosperity and support stay close today.";
       case "guanyin":
-        return "Let peace, softness, and healing stay a little closer today.";
+        return "Let peace and healing stay close today.";
       case "yuelao":
-        return "Let warmth, love, and connection stay a little closer today.";
+        return "Let warmth and connection stay close today.";
       case "wenchang":
-        return "Let clarity, focus, and steadiness stay a little closer today.";
+        return "Let clarity and focus stay close today.";
       case "mazu":
-        return "Let protection, safety, and steadier passage stay a little closer today.";
+        return "Let protection and safe passage stay close today.";
       default:
         return activeDeity.companionStyle;
     }
@@ -2408,17 +2408,17 @@ function App() {
   const premiumHook = useMemo(() => {
     switch (activeDeity.id) {
       case "caishen":
-        return "Open the focused prosperity pack for steadier support around money pressure and practical next steps.";
+        return "Open the prosperity pack for money and support.";
       case "guanyin":
-        return "Open the focused healing pack for a softer recovery path.";
+        return "Open the healing pack for calm and relief.";
       case "yuelao":
-        return "Open the focused connection pack for warmth, repair, and honest reach-outs.";
+        return "Open the connection pack for warmth and repair.";
       case "wenchang":
-        return "Open the focused discipline pack for study, writing, and calmer follow-through.";
+        return "Open the focus pack for study and deep work.";
       case "mazu":
-        return "Open the focused transition pack for steadiness, travel, and life change.";
+        return "Open the protection pack for travel and change.";
       default:
-        return "Open the support pack that matches the need you are already carrying.";
+        return "Open the pack that fits your need.";
     }
   }, [activeDeity.id]);
   const insightMoodLine = useMemo(() => getInsightMoodLine(activeDeity), [activeDeity]);
@@ -3207,23 +3207,23 @@ function App() {
     const pageMeta: Record<StaticPageId, { eyebrow: string; title: string; intro: string }> = {
       trust: {
         eyebrow: "Trust & Safety",
-        title: "How Mythic Guardian should be understood and used.",
-        intro: "This product is designed as a mythology-inspired ritual companion. It should feel meaningful and emotionally resonant, but it should never be interpreted as guaranteed truth, hard advice, or crisis support."
+        title: "How to use Mythic Guardian.",
+        intro: "Mythic Guardian is a symbolic ritual product. It is for reflection and comfort, not facts, advice, or crisis support."
       },
       privacy: {
         eyebrow: "Privacy",
-        title: "What this launch version stores and how to think about it.",
-        intro: "This launch version is intentionally lightweight. Most ritual data stays in the browser on the device using local storage so the experience can work fast without requiring an account."
+        title: "What this version stores.",
+        intro: "This version is lightweight. Most ritual data stays in your browser so the product works without an account."
       },
       terms: {
         eyebrow: "Terms",
-        title: "The operating rules for using this launch version.",
-        intro: "These terms are written for a launch-stage product and focus on clear expectations: symbolic use, no guarantees, respectful behavior, and the fact that pricing and features may evolve."
+        title: "The basic rules for using this product.",
+        intro: "This is a launch-stage product. Use it respectfully, understand that it is symbolic, and expect features or pricing to evolve."
       },
       refund: {
         eyebrow: "Refund Policy",
-        title: "How refunds are handled for Eastern Guardians.",
-        intro: "This launch version sells symbolic digital unlocks. We keep the refund policy simple, visible, and tied to whether the digital access worked as described."
+        title: "How refunds work.",
+        intro: "Eastern Guardians sells digital unlocks. Refunds depend on whether access worked as described."
       }
     };
 
@@ -3251,19 +3251,19 @@ function App() {
             <div className="static-sections">
               <article className="static-card">
                 <strong>1. Symbolic use only</strong>
-                <p>The readings, deity mappings, and shared-reflection outputs in Mythic Guardian are symbolic and reflective. They are not statements of objective fact and should not be treated as certain predictions.</p>
+                <p>Readings, guardian matches, and reflections are symbolic. They are not objective facts or guaranteed predictions.</p>
               </article>
               <article className="static-card">
-                <strong>2. Not advice or guaranteed outcomes</strong>
-                <p>This product does not provide medical, legal, financial, or mental-health advice. It also does not promise that progress, romance, safety, or success outcomes will occur.</p>
+                <strong>2. Not advice</strong>
+                <p>This product does not provide medical, legal, financial, or mental-health advice, and it does not promise outcomes.</p>
               </article>
               <article className="static-card">
                 <strong>3. Crisis boundary</strong>
-                <p>If a user is in crisis, at risk of self-harm, or facing urgent safety concerns, Mythic Guardian is not the right tool. Emergency services, licensed professionals, or local crisis resources should be used instead.</p>
+                <p>If you are in crisis or facing urgent safety concerns, use emergency services, licensed professionals, or local crisis support instead.</p>
               </article>
               <article className="static-card">
-                <strong>4. Shared reflection mirror</strong>
-                <p>Shared reflections are for emotional observation and storytelling. They are not interpersonal verdicts, psychological assessments, or professional counseling.</p>
+                <strong>4. Shared reflections</strong>
+                <p>Shared reflections are for storytelling and observation, not verdicts, assessments, or counseling.</p>
               </article>
             </div>
           ) : null}
@@ -3271,20 +3271,20 @@ function App() {
           {staticPage === "privacy" ? (
             <div className="static-sections">
               <article className="static-card">
-                <strong>1. Local ritual data</strong>
-                <p>In the current launch version, petition text, birth date, bond state, streaks, and ritual history are stored locally in the browser on the user’s device so the experience can continue between sessions.</p>
+                <strong>1. Local data</strong>
+                <p>In this version, ritual text, birth date, streaks, and history are stored locally in your browser.</p>
               </article>
               <article className="static-card">
-                <strong>2. No account required yet</strong>
-                <p>The launch version does not require a permanent account to begin using the product. That keeps the first experience simple and reduces collection pressure.</p>
+                <strong>2. No account yet</strong>
+                <p>You do not need a permanent account to start using the product.</p>
               </article>
               <article className="static-card">
-                <strong>3. What may change later</strong>
-                <p>If accounts, payments, analytics, or email capture are added later, this page should be updated before those systems go live, and users should be clearly informed.</p>
+                <strong>3. Future changes</strong>
+                <p>If accounts, analytics, or new data collection are added later, this page should be updated first.</p>
               </article>
               <article className="static-card">
-                <strong>4. User control</strong>
-                <p>Users can currently clear their local state by resetting the profile in the product. Future versions should add a more explicit data-controls panel if synced accounts are introduced.</p>
+                <strong>4. Your control</strong>
+                <p>You can clear local state by resetting your profile in the product.</p>
               </article>
             </div>
           ) : null}
@@ -3292,20 +3292,20 @@ function App() {
           {staticPage === "terms" ? (
             <div className="static-sections">
               <article className="static-card">
-                <strong>1. Launch-stage software</strong>
-                <p>Mythic Guardian is a launch-stage product. Features, pricing, shared-reflection outputs, ritual wording, and availability may change as the product evolves.</p>
+                <strong>1. Launch-stage product</strong>
+                <p>Features, pricing, wording, and availability may change as the product evolves.</p>
               </article>
               <article className="static-card">
                 <strong>2. Acceptable use</strong>
-                <p>Users should not use the product to harass others, impersonate others, or present symbolic readings as professional advice, verified diagnosis, or guaranteed supernatural outcomes.</p>
+                <p>Do not use the product to harass others, impersonate others, or present symbolic readings as professional advice or guaranteed outcomes.</p>
               </article>
               <article className="static-card">
-                <strong>3. Payments and premium access</strong>
-                <p>If paid features are activated in the launch version, one-time ritual packs are the preferred first offer. Refund handling, fulfillment scope, and any future recurring billing terms must be clearly disclosed in checkout before charging users.</p>
+                <strong>3. Payments</strong>
+                <p>Any paid access, refund terms, and checkout details should be shown clearly before purchase.</p>
               </article>
               <article className="static-card">
-                <strong>4. Intellectual framing</strong>
-                <p>The product is inspired by Chinese guardian mythology and cultural comfort traditions, presented as a modern reflective ritual product rather than a religious authority or institutional service.</p>
+                <strong>4. Product framing</strong>
+                <p>This product is inspired by Chinese guardian mythology and presented as a modern symbolic ritual experience.</p>
               </article>
             </div>
           ) : null}
@@ -3313,20 +3313,20 @@ function App() {
           {staticPage === "refund" ? (
             <div className="static-sections">
               <article className="static-card">
-                <strong>1. Digital unlock scope</strong>
-                <p>Paid access in Eastern Guardians is for digital guardian unlocks and related symbolic features only. There is no shipping, no physical item, and no promise of real-world outcomes.</p>
+                <strong>1. Digital unlocks only</strong>
+                <p>Paid access covers digital guardian unlocks only. There is no shipping, no physical item, and no promised outcome.</p>
               </article>
               <article className="static-card">
-                <strong>2. When a refund may be granted</strong>
-                <p>If a customer is charged but the purchased guardian unlock is not delivered, cannot be accessed, or fails materially because of a product-side issue, they can contact support to request a refund review.</p>
+                <strong>2. When refunds may apply</strong>
+                <p>If you are charged but your unlock is not delivered or cannot be accessed because of a product issue, you can request a refund review.</p>
               </article>
               <article className="static-card">
-                <strong>3. When refunds are usually not granted</strong>
-                <p>Refunds are usually not granted for personal preference, changed feelings, or disappointment with symbolic wording after the digital unlock has been successfully delivered and used as described.</p>
+                <strong>3. When refunds usually do not apply</strong>
+                <p>Refunds usually do not apply for personal preference or disappointment after the digital unlock has been delivered as described.</p>
               </article>
               <article className="static-card">
                 <strong>4. Support window</strong>
-                <p>Customers should contact support within 7 days of purchase and include the checkout email plus a short description of the issue so the request can be reviewed quickly.</p>
+                <p>Contact support within 7 days of purchase with your checkout email and a short description of the issue.</p>
               </article>
             </div>
           ) : null}
@@ -3349,19 +3349,19 @@ function App() {
         <section className="landing">
           <div className="landing-copy">
             <p className="eyebrow">Eastern Guardians</p>
-            <h1>Keep an Eastern guardian close.</h1>
+            <h1>Find the guardian you need today.</h1>
             <p className="lead">
-              Choose the kind of blessing you want to keep close. Invite one Eastern guardian as a symbol of comfort, protection, and support.
+              Choose a blessing path, match one Eastern guardian, and keep that symbol close.
             </p>
             <div className="hero-actions">
               <button className="primary-button" onClick={startOnboarding}>
                 Choose my guardian
               </button>
-              <span className="micro-copy">Choose one guardian. Keep the blessing close. Share it with someone you care about.</span>
+              <span className="micro-copy">Your first guardian is free.</span>
             </div>
             <div className="landing-simple-note">
-              <span>Simple guardian ritual</span>
-              <strong>Your first guardian is free. Keep one symbol of blessing close, then unlock others only when life asks for a different kind of support.</strong>
+              <span>Simple ritual</span>
+              <strong>Match once, keep your card, and unlock more guardians only when you want another kind of blessing.</strong>
             </div>
           </div>
 
@@ -3410,10 +3410,10 @@ function App() {
           <div className="form-card onboarding-card">
             <div className="onboarding-header">
               <div>
-                <p className="eyebrow">Match A Guardian</p>
-                <h1>Choose the kind of blessing you need today.</h1>
+                <p className="eyebrow">Choose A Blessing</p>
+                <h1>What do you need today?</h1>
                 <p className="lead compact">
-                  Pick one path. We will match the guardian that fits it best.
+                  Pick one path and we will match your guardian.
                 </p>
               </div>
             </div>
@@ -3434,11 +3434,11 @@ function App() {
             </div>
 
             <div className="preview-band">
-              <span>Matched guardian</span>
-              <strong>{onboardingDeity.name} is your matched guardian for this blessing.</strong>
+              <span>Your match</span>
+              <strong>{onboardingDeity.name} matches this blessing.</strong>
             </div>
             <div className="recommendation-note recommendation-note-stronger">
-              <span>Why this guardian</span>
+              <span>Why</span>
               <p>{recommendationReason}</p>
             </div>
 
@@ -3462,7 +3462,7 @@ function App() {
             </div>
 
             <button className="primary-button" onClick={completeOnboarding} disabled={!onboardingReady}>
-              Keep this guardian for free
+              Keep this guardian free
             </button>
           </div>
         </section>
@@ -3484,7 +3484,7 @@ function App() {
               <div>
                 <h1>{activeDeity.name}</h1>
                 <p className="muted">
-                  {activeDeity.name} is staying with you
+                  Your guardian for today
                 </p>
               </div>
             </div>
@@ -3504,16 +3504,16 @@ function App() {
               </div>
             </div>
             <div className="petition-summary petition-summary-compact">
-              <span>Your chosen blessing</span>
-              <strong>{profile.currentConcern.trim() ? profile.currentConcern : "Your first blessing will appear here."}</strong>
+              <span>Blessing</span>
+              <strong>{profile.currentConcern.trim() ? profile.currentConcern : "Your blessing appears here."}</strong>
             </div>
             <div className="compact-stats-grid">
               <article>
-                <span>Main blessing</span>
+                <span>Brings</span>
                 <strong>{activeDeity.themes[0]}</strong>
               </article>
               <article>
-                <span>Supports</span>
+                <span>Also supports</span>
                 <strong>{activeDeity.themes[1]}</strong>
               </article>
             </div>
@@ -3579,8 +3579,8 @@ function App() {
             <p className="eyebrow">Offer Incense</p>
             <div className="constellation-state incense-quick-panel">
               <span>{activeCompanion.streak === 0 ? "No incense yet" : `${activeCompanion.streak} day${activeCompanion.streak > 1 ? "s" : ""} offered`}</span>
-              <strong>{ritualComplete ? "Today's incense is already lit." : "Light one incense to keep this guardian close today."}</strong>
-              <p>{ritualComplete ? "The altar is glowing and the blessing is staying with you." : "Tap below and go to the altar to light today's incense."}</p>
+              <strong>{ritualComplete ? "Today's incense is lit." : "Light incense for today's blessing."}</strong>
+              <p>{ritualComplete ? "The altar is glowing." : "Tap below to light it."}</p>
             </div>
             <button className="ghost-button" onClick={scrollToGuidanceSection}>
               Offer incense
@@ -3612,14 +3612,14 @@ function App() {
 
             <div className="result-hero-grid">
               <article className="result-hero-card result-hero-card-primary">
-                <span className="detail-label">Your matched guardian</span>
+                <span className="detail-label">Your guardian</span>
                 <h3>{activeDeity.name}</h3>
                 <p>{activeDeity.essence}</p>
                 <div className="result-hero-actions">
                   <button className="primary-button" onClick={scrollToGuidanceSection}>
-                    Keep this blessing close
+                    Go to incense
                   </button>
-                <small>Save it, read it, or keep it quietly with you today.</small>
+                <small>Light incense, save your card, or share it.</small>
               </div>
             </article>
             </div>
@@ -3629,12 +3629,12 @@ function App() {
             <article id="daily-guidance" className="panel ritual-panel ritual-panel-guidance">
               <p className="eyebrow">Offer Incense</p>
               <h3>{activeCompanion.streak === 0 ? `Light incense for ${activeDeity.name}` : `${activeDeity.name} is already with you today`}</h3>
-              <p className="muted">Choose one offering and keep this guardian close today.</p>
+              <p className="muted">Choose one offering.</p>
               <div className={`incense-ritual-banner ${ritualComplete ? "lit" : ""}`}>
                 <div className="incense-ritual-copy">
                   <span>Incense days</span>
                   <strong>{activeCompanion.streak}</strong>
-                  <p>{ritualComplete ? "Today's incense is burning at the altar." : "Light today's incense and the altar will begin to glow."}</p>
+                  <p>{ritualComplete ? "Today's incense is burning." : "Light incense to begin today's ritual."}</p>
                 </div>
                 <button className={`incense-action-button ${ritualComplete ? "lit" : ""}`} onClick={performRitual} disabled={ritualComplete}>
                   <i className="incense-action-aura" aria-hidden="true" />
@@ -3673,8 +3673,8 @@ function App() {
 
             <article className="panel ritual-panel ritual-panel-share">
               <p className="eyebrow">Share Card</p>
-              <h3>Save your guardian card or send it to a friend.</h3>
-              <p className="muted">Your card includes the guardian you invited and a blessing message you can share.</p>
+              <h3>Save your card or share it.</h3>
+              <p className="muted">A simple card with your guardian and blessing.</p>
 
               <div className="share-card">
                 <span className="share-label">{shareCardLabel}</span>
@@ -3684,15 +3684,15 @@ function App() {
                 </p>
                 <p className="share-spirit-line">{shareCardSpiritLine}</p>
                 <div className="share-signal-row">
-                  <span>Save it for yourself</span>
-                  <span>Send a blessing to a friend</span>
+                  <span>Keep it close</span>
+                  <span>Share the blessing</span>
                 </div>
                 <small>{oracle}</small>
-                <small className="share-legal-note">Mythology-inspired and symbolic, not guaranteed advice or outcomes.</small>
+                <small className="share-legal-note">Symbolic only. No promised outcomes.</small>
               </div>
               <div className={`share-preview-shell finish-${activeCardFinish.id}`}>
                 <div className="share-preview-meta">
-                  <span>Blessing card preview</span>
+                  <span>Card preview</span>
                   <strong>{activeDeity.name}</strong>
                 </div>
                 <img className="share-preview-image" src={shareCardPreview} alt={`${activeDeity.name} guardian card preview`} />
@@ -3700,7 +3700,7 @@ function App() {
 
               <div className="share-actions">
                 <button className="primary-button share-button" onClick={exportShareCard} disabled={!shareCardReady}>
-                  {shareCardReady ? "Save blessing card" : "Rendering blessing card"}
+                  {shareCardReady ? "Save card" : "Rendering card"}
                 </button>
                 <button className="ghost-button share-button" onClick={() => void copyOracle()}>
                   Copy share text
@@ -3726,18 +3726,15 @@ function App() {
               ) : null}
               <p className="eyebrow">Unlock Other Guardians</p>
               <div className="launch-panel-copy">
-                <h3>Your matched guardian is free. The other four unlock separately, or you can open all five at once.</h3>
+                <h3>Your first guardian is free. Unlock the rest anytime.</h3>
                 <p className="muted">
-                  All five guardians are part of the product. Your first guardian is free based on your chosen blessing. The remaining four unlock one by one, and a full collection unlock is also available.
-                </p>
-                <p className="muted">
-                  The experience stays on this website. Payment only opens a secure checkout page, then returns here so the unlock can continue inside your shrine.
+                  Buy one guardian at a time, or unlock the full set.
                 </p>
               </div>
               {providerReadiness.provider === "gumroad" ? (
                 <div className="checkout-urgency-note commerce-status-grid">
-                  <span>Gumroad checkout flow</span>
-                  <strong>Pay on Gumroad in a new tab, then return here with the same email so your unlock can be confirmed and opened inside the website.</strong>
+                  <span>Checkout</span>
+                  <strong>Pay on Gumroad, then come back here with the same email.</strong>
                   <small className="checkout-helper-line">Current restore email: {restoreEmail || recentCommerceEmail || getDefaultCheckoutEmail()}</small>
                   <button className="ghost-button commerce-restore-button" onClick={() => void handleRestorePurchases()}>
                     Restore access
@@ -3748,11 +3745,9 @@ function App() {
                 <div className="full-unlock-card">
                   <div className="full-unlock-header">
                     <div className="full-unlock-copy">
-                      <span className="full-unlock-badge">Full collection unlock</span>
-                      <strong>Unlock all five guardians in one step</strong>
-                      <p>
-                        Your matched guardian stays free. If you want every blessing path available right away, you can unlock the full Eastern Guardians collection here.
-                      </p>
+                      <span className="full-unlock-badge">Full set</span>
+                      <strong>Unlock all five guardians</strong>
+                      <p>Best if you want every blessing path ready.</p>
                     </div>
                     <div className="full-unlock-meta">
                       <span>One-time unlock</span>
@@ -3780,8 +3775,8 @@ function App() {
               {lockedGuardianPacks.length > 0 ? (
                 <div className="single-unlock-block">
                   <div className="single-unlock-copy">
-                    <span className="single-unlock-label">Single guardian unlocks</span>
-                    <p>Prefer to keep it simple? You can unlock the remaining guardians one by one below.</p>
+                    <span className="single-unlock-label">Unlock one by one</span>
+                    <p>Pick only the guardians you want.</p>
                   </div>
                   <div className="deity-list deity-list-commerce">
                   {lockedGuardianPacks.map((pack) => (
@@ -3789,7 +3784,7 @@ function App() {
                       <span>Paid unlock</span>
                       <strong>{pack.guardian} • {pack.price}</strong>
                       <em>{pack.trigger}</em>
-                      <p>Your matched first guardian is free. This guardian unlocks separately as a one-time purchase.</p>
+                      <p>One-time unlock for this guardian.</p>
                       <div className="tier-feature-list">
                         {pack.outcomes.map((outcome) => (
                           <span key={outcome}>{outcome}</span>
@@ -3806,7 +3801,7 @@ function App() {
                 <div className="launch-note launch-note-pack">
                   <span>All guardians unlocked</span>
                   <strong>Your full guardian collection is already open.</strong>
-                  <p>You now have all five guardians available and can return to any blessing whenever you need it.</p>
+                  <p>All five blessing paths are ready.</p>
                 </div>
               )}
             </section>
@@ -3829,13 +3824,13 @@ function App() {
             </div>
             <div className="upgrade-sheet-body upgrade-sheet-body-checkout">
               <div className="upgrade-sheet-price">
-                <span>One-time guardian unlock</span>
+                <span>One-time unlock</span>
                 <strong>{selectedPack.price}</strong>
                 <small className="pack-trigger-line">{selectedPack.trigger}</small>
                 <p>
                   {selectedPack.title === allGuardiansPack.title
-                    ? "Your matched first guardian is free. This unlock opens the full five-guardian collection in one purchase."
-                    : "Your matched first guardian is free. This unlock pays once for this guardian only."}
+                    ? "Includes the full five-guardian collection."
+                    : "Unlocks this guardian for a one-time payment."}
                 </p>
               </div>
               <div className="checkout-sheet-card">
@@ -3860,34 +3855,28 @@ function App() {
                   </div>
                 </div>
                 <div className="checkout-summary-note">
-                  <span>How it works</span>
+                  <span>What you get</span>
                   <strong>
                     {selectedPack.title === allGuardiansPack.title
-                      ? "All five guardians are part of the product. Your matched first guardian is free, and this option unlocks the remaining collection at once."
-                      : "All five guardians are part of the product. Your matched first guardian is free, and each additional guardian can unlock separately."}
+                      ? "Unlock every guardian and every blessing path at once."
+                      : "Add this guardian to your shrine and switch to it anytime."}
                   </strong>
                 </div>
                 <div className="checkout-urgency-note">
                   <span>After payment</span>
                   <strong>
                     {providerReadiness.provider === "gumroad"
-                      ? "Gumroad opens directly from this page. After payment, return here and your guardian unlock will be confirmed with the same checkout email."
+                      ? "Return here with the same email and we will confirm the unlock."
                       : selectedPack.title === allGuardiansPack.title
-                        ? "Checkout opens in a secure payment page, then returns here so your full guardian collection can unlock inside the website."
-                        : "Checkout opens in a secure payment page, then returns here so this guardian can unlock inside the website."}
+                        ? "Return here and your full guardian collection will unlock."
+                        : "Return here and this guardian will unlock."}
                   </strong>
                 </div>
                 {providerReadiness.provider === "gumroad" ? (
                   <div className="checkout-urgency-note">
                     <span>Restore access</span>
-                    <strong>Use the same email you pay with on Gumroad. If the webhook arrives a little late, Restore access will pull the unlock back into your shrine.</strong>
+                    <strong>Use the same Gumroad email if you need to pull the unlock back into your shrine.</strong>
                     <small className="checkout-helper-line">Current restore email: {restoreEmail || recentCommerceEmail || getDefaultCheckoutEmail()}</small>
-                  </div>
-                ) : null}
-                {providerReadiness.provider === "gumroad" ? (
-                  <div className="checkout-summary-note">
-                    <span>Simple flow</span>
-                    <strong>1. Pay on Gumroad. 2. Return here. 3. We confirm the payment from your checkout email. 4. If confirmation is delayed, tap Restore access.</strong>
                   </div>
                 ) : null}
                 <div className="upgrade-sheet-benefits">
@@ -3897,10 +3886,6 @@ function App() {
                       <li key={outcome}>{outcome}</li>
                     ))}
                   </ul>
-                </div>
-                <div className="checkout-urgency-note">
-                  <span>Why it works</span>
-                  <strong>People can simply invite the blessing they need right now, without complexity.</strong>
                 </div>
                 <p className="checkout-legal-note">
                   Symbolic and cultural comfort only. This product does not promise outcomes.
