@@ -227,25 +227,48 @@ function upsertCheckoutSession(state, session) {
   };
 }
 
-function findMatchingCheckoutSession(state, { email, title, guardian }) {
+function findMatchingCheckoutSession(state, { email, title, guardian, sessionId }) {
+  const normalizedSessionId = String(sessionId || "").trim();
   const normalizedEmail = String(email || "").trim().toLowerCase();
   const normalizedTitle = String(title || "").trim();
   const normalizedGuardian = String(guardian || "").trim();
+  const pendingSessions = normalizeCheckoutSessions(state.checkoutSessions)
+    .filter((session) => session.status === "pending" && session.mode === "pack" && session.provider === "gumroad")
+    .sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt));
 
-  return normalizeCheckoutSessions(state.checkoutSessions)
-    .filter(
+  if (normalizedSessionId) {
+    const exactSession = pendingSessions.find((session) => session.sessionId === normalizedSessionId);
+    if (exactSession) {
+      return exactSession;
+    }
+  }
+
+  if (normalizedEmail) {
+    const exactEmailMatch = pendingSessions.find(
       (session) =>
-        session.status === "pending" &&
-        session.mode === "pack" &&
-        session.provider === "gumroad" &&
-        session.email === normalizedEmail
-    )
-    .sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt))
-    .find(
-      (session) =>
+        session.email === normalizedEmail &&
         session.title === normalizedTitle &&
         (!normalizedGuardian || !session.guardian || session.guardian === normalizedGuardian)
     );
+
+    if (exactEmailMatch) {
+      return exactEmailMatch;
+    }
+  }
+
+  const anonymousMatches = pendingSessions.filter(
+    (session) =>
+      !session.email &&
+      session.title === normalizedTitle &&
+      (!normalizedGuardian || !session.guardian || session.guardian === normalizedGuardian) &&
+      Date.now() - Date.parse(session.createdAt) < 1000 * 60 * 60 * 24
+  );
+
+  if (anonymousMatches.length === 1) {
+    return anonymousMatches[0];
+  }
+
+  return undefined;
 }
 
 function markCheckoutSessionCompleted(state, sessionId, details = {}) {
@@ -274,6 +297,13 @@ function handleGumroadSale(state, payload) {
   const product = GUMROAD_PRODUCT_MAP[permalink];
   const email = String(payload.email || payload.purchaser_email || "").trim().toLowerCase();
   const gumroadSaleId = String(payload.sale_id || payload.purchase_id || "").trim();
+  const sessionId = String(
+    payload.session_id ||
+      payload.sessionId ||
+      payload.custom ||
+      payload.checkout_session ||
+      ""
+  ).trim();
 
   if (!product || !email) {
     return track(state, "gumroad_sale_ignored", {
@@ -293,12 +323,14 @@ function handleGumroadSale(state, payload) {
   const matchedSession = findMatchingCheckoutSession(state, {
     email,
     title: product.title,
-    guardian: product.guardian
+    guardian: product.guardian,
+    sessionId
   });
   const next = upsertAccount(state, email);
   const purchasedAt = new Date().toISOString();
   const withCompletedSession = matchedSession
     ? markCheckoutSessionCompleted(next, matchedSession.sessionId, {
+        email,
         gumroadPermalink: permalink,
         gumroadSaleId
       })
@@ -328,6 +360,8 @@ function handleGumroadSale(state, payload) {
       packTitle: product.title,
       guardian: product.guardian,
       permalink,
+      matchedSessionId: matchedSession?.sessionId || "",
+      webhookSessionId: sessionId,
       sessionId: matchedSession?.sessionId || "",
       gumroadSaleId
     }
@@ -336,14 +370,23 @@ function handleGumroadSale(state, payload) {
 
 function createPackSession(input) {
   const sessionId = createId("pack");
+  const normalizedEmail = String(input.email || "").trim().toLowerCase();
+  const returnParams = new URLSearchParams({
+    checkout: "success",
+    mode: "pack",
+    title: String(input.title || "").trim(),
+    checkout_session: sessionId
+  });
+
+  if (normalizedEmail) {
+    returnParams.set("email", normalizedEmail);
+  }
 
   return {
     sessionId,
     provider: PROVIDER,
     mode: "pack",
-    redirectUrl: `/?checkout=success&mode=pack&email=${encodeURIComponent(
-      String(input.email).trim().toLowerCase()
-    )}&title=${encodeURIComponent(String(input.title || "").trim())}&checkout_session=${encodeURIComponent(sessionId)}`,
+    redirectUrl: `/?${returnParams.toString()}`,
     status: PROVIDER === "manual_waitlist" ? "requires_manual_review" : "pending",
     message:
       PROVIDER === "manual_waitlist"

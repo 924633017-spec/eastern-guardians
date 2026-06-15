@@ -1958,14 +1958,15 @@ function App() {
     const checkoutEmail = params.get("email");
     const checkoutTitle = params.get("title");
 
-    if (checkoutStatus !== "success" || !checkoutMode || !checkoutEmail) {
+    if (checkoutStatus !== "success" || !checkoutMode) {
       return;
     }
 
-    const normalizedCheckoutEmail = normalizeCheckoutEmail(checkoutEmail);
+    const normalizedCheckoutEmail = normalizeCheckoutEmail(checkoutEmail ?? "");
     if (
       checkoutMode === "pack" &&
       checkoutProvider === "gumroad" &&
+      checkoutEmail &&
       !validateCheckoutEmail(normalizedCheckoutEmail)
     ) {
       params.delete("checkout");
@@ -2012,6 +2013,14 @@ function App() {
             }
 
             if (!sessionCompleted) {
+              if (!validateCheckoutEmail(normalizedCheckoutEmail)) {
+                setCheckoutReturnState("success");
+                setCheckoutReturnMessage(
+                  "Payment return detected. If the unlock does not appear in a moment, enter your Gumroad email and tap Restore access."
+                );
+                return;
+              }
+
               const restoredState = await commerceGateway.restorePurchases({
                 email: normalizedCheckoutEmail
               });
@@ -2044,7 +2053,7 @@ function App() {
           }
 
           const nextCommerceState = await commerceGateway.confirmPackCheckout({
-            email: normalizedCheckoutEmail,
+            email: normalizedCheckoutEmail || getDefaultCheckoutEmail(),
             title: pack.title,
             guardian: pack.guardian,
             priceLabel: pack.price
@@ -2052,8 +2061,12 @@ function App() {
           const nextEntitlements = deriveCommerceEntitlements(nextCommerceState);
           setCommerceState(nextCommerceState);
           applyCommerceEntitlements(nextEntitlements.unlockedPacks);
-          setRestoreEmail(normalizedCheckoutEmail);
-          setShareMessage(`${pack.title} confirmed for ${normalizedCheckoutEmail}.`);
+          if (validateCheckoutEmail(normalizedCheckoutEmail)) {
+            setRestoreEmail(normalizedCheckoutEmail);
+            setShareMessage(`${pack.title} confirmed for ${normalizedCheckoutEmail}.`);
+          } else {
+            setShareMessage(`${pack.title} confirmed.`);
+          }
           setCheckoutReturnState("success");
           setCheckoutReturnMessage(
             pack.title === allGuardiansPack.title
@@ -2065,7 +2078,11 @@ function App() {
         setPendingCheckoutSession((current) => (current && checkoutSessionId && current.sessionId === checkoutSessionId ? null : current));
       } catch {
         setCheckoutReturnState("error");
-        setCheckoutReturnMessage("Payment returned, but we could not finish the unlock yet. Tap Restore access with the same checkout email.");
+        setCheckoutReturnMessage(
+          validateCheckoutEmail(normalizedCheckoutEmail)
+            ? "Payment returned, but we could not finish the unlock yet. Tap Restore access with the same checkout email."
+            : "Payment returned, but we could not confirm the unlock yet. Enter your Gumroad email and tap Restore access."
+        );
       } finally {
         params.delete("checkout");
         params.delete("checkout_session");
