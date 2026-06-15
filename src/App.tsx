@@ -2831,6 +2831,8 @@ function App() {
     setPackCheckoutStep("details");
   };
 
+  const isDirectGumroadLaunch = providerReadiness.provider === "gumroad" && providerReadiness.mode === "live";
+
   const applyCommerceEntitlements = (nextMembershipTier = effectiveMembershipTier, nextUnlockedPacks = effectiveUnlockedPacks) => {
     setProfile((current) => ({
       ...current,
@@ -2878,17 +2880,13 @@ function App() {
     closeUpgradeSheet();
   };
 
-  const handleUnlockPackPurchase = async () => {
-    if (!selectedPack) {
-      return;
-    }
-
+  const startPackCheckout = async (pack: RitualPack, options?: { closeSheet?: boolean }) => {
     const checkoutEmail = recentCommerceEmail || restoreEmail || getDefaultCheckoutEmail();
     const session = await commerceGateway.createPackCheckoutSession({
       email: checkoutEmail,
-      title: selectedPack.title,
-      guardian: selectedPack.guardian,
-      priceLabel: selectedPack.price
+      title: pack.title,
+      guardian: pack.guardian,
+      priceLabel: pack.price
     });
     setPendingCheckoutSession(session);
     setCheckoutReturnState("idle");
@@ -2898,7 +2896,7 @@ function App() {
       session.status === "requires_manual_review"
         ? "Pack demand captured for launch prep. Enable live checkout before fulfillment."
         : session.provider === "gumroad"
-          ? "Opening Gumroad in a new tab. After payment, come back here to continue access setup."
+          ? "Opening Gumroad checkout. After payment, you will return here to continue access setup."
           : "Opening secure checkout. After payment, this guardian unlocks here."
     );
     if (session.status === "pending" && session.redirectUrl) {
@@ -2906,18 +2904,39 @@ function App() {
         writePendingGumroadCheckout({
           sessionId: session.sessionId,
           email: checkoutEmail.trim().toLowerCase(),
-          title: selectedPack.title,
-          guardian: selectedPack.guardian,
+          title: pack.title,
+          guardian: pack.guardian,
           createdAt: new Date().toISOString()
         });
-        window.open(session.redirectUrl, "_blank", "noopener,noreferrer");
-        closePackSheet();
+        if (options?.closeSheet) {
+          closePackSheet();
+        }
+        window.location.href = session.redirectUrl;
         return;
       }
       window.location.href = session.redirectUrl;
       return;
     }
-    closePackSheet();
+    if (options?.closeSheet) {
+      closePackSheet();
+    }
+  };
+
+  const handleUnlockPackPurchase = async () => {
+    if (!selectedPack) {
+      return;
+    }
+
+    await startPackCheckout(selectedPack, { closeSheet: true });
+  };
+
+  const handlePackLaunchAction = (pack: RitualPack) => {
+    if (isDirectGumroadLaunch) {
+      void startPackCheckout(pack);
+      return;
+    }
+
+    openPackSheet(pack);
   };
 
   useEffect(() => {
@@ -3663,7 +3682,7 @@ function App() {
                       <span key={outcome}>{outcome}</span>
                     ))}
                   </div>
-                  <button className="primary-button full-unlock-action" onClick={() => openPackSheet(allGuardiansPack)}>
+                  <button className="primary-button full-unlock-action" onClick={() => handlePackLaunchAction(allGuardiansPack)}>
                     {providerReadiness.provider === "gumroad" ? "Pay on Gumroad" : "Unlock all guardians"}
                   </button>
                 </div>
@@ -3686,7 +3705,7 @@ function App() {
                           <span key={outcome}>{outcome}</span>
                         ))}
                       </div>
-                      <button className="primary-button" onClick={() => openPackSheet(pack)}>
+                      <button className="primary-button" onClick={() => handlePackLaunchAction(pack)}>
                         {providerReadiness.provider === "gumroad" ? `Pay for ${pack.guardian}` : `Unlock ${pack.guardian}`}
                       </button>
                     </div>
@@ -3762,7 +3781,7 @@ function App() {
                   <span>After payment</span>
                   <strong>
                     {providerReadiness.provider === "gumroad"
-                      ? "Gumroad opens in a new tab. After payment, return to this page and your guardian unlock will be confirmed here with the same checkout email."
+                      ? "Gumroad opens directly from this page. After payment, return here and your guardian unlock will be confirmed with the same checkout email."
                       : selectedPack.title === allGuardiansPack.title
                         ? "Checkout opens in a secure payment page, then returns here so your full guardian collection can unlock inside the website."
                         : "Checkout opens in a secure payment page, then returns here so this guardian can unlock inside the website."}
