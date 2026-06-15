@@ -1,0 +1,8 @@
+node_modules/
+dist/
+dist-upload/
+output/
+.env
+.DS_Store
+.local-commerce-state.json
+*.tsbuildinfo

@@ -1,0 +1,831 @@
+<style>
+  :root {
+    --line: rgba(255, 255, 255, 0.1);
+    --text: #f4eee7;
+    --muted: rgba(244, 238, 231, 0.72);
+    --gold: #edc785;
+    --jade: #a6d8d3;
+    --rose: #d987a8;
+    --ink: #99a480;
+    --sea: #89c8dc;
+  }
+
+  body {
+    background:
+      radial-gradient(circle at top left, rgba(237, 199, 133, 0.12), transparent 22%),
+      radial-gradient(circle at top right, rgba(137, 200, 220, 0.1), transparent 20%),
+      linear-gradient(180deg, #0f0b15, #07050a 78%);
+    color: var(--text);
+  }
+
+  .page {
+    display: grid;
+    gap: 24px;
+  }
+
+  .hero,
+  .section,
+  .warning {
+    border-radius: 30px;
+    border: 1px solid var(--line);
+    background: rgba(16, 12, 24, 0.76);
+    backdrop-filter: blur(20px);
+    box-shadow: 0 24px 80px rgba(0, 0, 0, 0.28);
+  }
+
+  .hero,
+  .section {
+    padding: 30px;
+  }
+
+  .warning {
+    padding: 22px 26px;
+    border-color: rgba(255, 143, 143, 0.18);
+    background: linear-gradient(180deg, rgba(64, 25, 28, 0.7), rgba(20, 12, 18, 0.94));
+  }
+
+  h1,
+  h2,
+  h3 {
+    margin: 0;
+    font-family: Georgia, "Times New Roman", serif;
+    letter-spacing: 0.02em;
+  }
+
+  h1 {
+    font-size: 60px;
+    line-height: 0.94;
+    max-width: 10ch;
+  }
+
+  h2 {
+    font-size: 38px;
+    margin-bottom: 18px;
+  }
+
+  h3 {
+    font-size: 26px;
+    margin-bottom: 10px;
+  }
+
+  p,
+  li {
+    margin: 0;
+    color: var(--muted);
+    line-height: 1.75;
+  }
+
+  strong {
+    color: var(--text);
+  }
+
+  .label {
+    margin-bottom: 12px;
+    color: rgba(244, 238, 231, 0.56);
+    font-size: 12px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+  }
+
+  .hero-grid,
+  .section-grid,
+  .material-grid,
+  .deity-grid,
+  .ref-grid,
+  .shot-grid,
+  .real-grid {
+    display: grid;
+    gap: 18px;
+  }
+
+  .hero-grid {
+    grid-template-columns: 1.2fr 0.8fr;
+  }
+
+  .section-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .ref-grid {
+    grid-template-columns: 300px 1fr;
+    align-items: start;
+  }
+
+  .material-grid {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+
+  .deity-grid {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+
+  .shot-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .real-grid {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+
+  .pill-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 20px;
+  }
+
+  .pill {
+    padding: 9px 13px;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .hero-vfx {
+    min-height: 320px;
+    border-radius: 26px;
+    overflow: hidden;
+    position: relative;
+    border: 1px solid rgba(255,255,255,0.08);
+    background:
+      radial-gradient(circle at 50% 26%, rgba(255,255,255,0.16), transparent 16%),
+      radial-gradient(circle at 50% 42%, rgba(141, 189, 235, 0.2), transparent 24%),
+      linear-gradient(180deg, rgba(237,199,133,0.12), rgba(26,20,35,0.16) 32%, rgba(13,10,19,0.95));
+    box-shadow: inset 0 0 100px rgba(255,255,255,0.04);
+  }
+
+  .hero-vfx::before,
+  .hero-vfx::after {
+    content: "";
+    position: absolute;
+    border-radius: 50%;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
+  .hero-vfx::before {
+    top: 32px;
+    width: 220px;
+    height: 220px;
+    border: 1px solid rgba(255,255,255,0.16);
+    box-shadow: 0 0 50px rgba(255,255,255,0.06);
+  }
+
+  .hero-vfx::after {
+    top: 68px;
+    width: 126px;
+    height: 170px;
+    background:
+      radial-gradient(circle at 50% 18%, rgba(251,242,234,0.96) 0 20px, transparent 21px),
+      linear-gradient(180deg, rgba(241,244,249,0.92), rgba(97,122,173,0.68));
+    clip-path: polygon(34% 10%, 66% 10%, 74% 28%, 82% 66%, 92% 100%, 8% 100%, 18% 66%, 26% 28%);
+    filter: drop-shadow(0 16px 30px rgba(129, 176, 229, 0.28));
+  }
+
+  .vfx-rings,
+  .vfx-particles {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+  }
+
+  .vfx-rings span,
+  .vfx-particles span {
+    position: absolute;
+    display: block;
+  }
+
+  .vfx-rings span {
+    left: 50%;
+    top: 50%;
+    border-radius: 50%;
+    border: 1px solid rgba(255,255,255,0.12);
+    transform: translate(-50%, -50%);
+  }
+
+  .vfx-rings span:nth-child(1) { width: 280px; height: 280px; opacity: 0.46; }
+  .vfx-rings span:nth-child(2) { width: 360px; height: 360px; opacity: 0.26; }
+  .vfx-rings span:nth-child(3) { width: 420px; height: 420px; opacity: 0.12; }
+
+  .vfx-particles span {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.86);
+    box-shadow: 0 0 20px rgba(255,255,255,0.28);
+  }
+
+  .vfx-particles span:nth-child(1) { left: 26%; top: 30%; }
+  .vfx-particles span:nth-child(2) { right: 28%; top: 38%; width: 14px; height: 14px; }
+  .vfx-particles span:nth-child(3) { left: 32%; bottom: 26%; width: 8px; height: 8px; }
+  .vfx-particles span:nth-child(4) { right: 24%; bottom: 24%; width: 12px; height: 12px; }
+
+  .callout,
+  .card,
+  .deity-card,
+  .material,
+  .source-card,
+  .shot-card,
+  .real-card {
+    border-radius: 24px;
+    padding: 20px;
+    border: 1px solid rgba(255,255,255,0.08);
+    background: rgba(255,255,255,0.03);
+  }
+
+  .real-card {
+    padding: 0;
+    overflow: hidden;
+  }
+
+  .real-card img {
+    width: 100%;
+    aspect-ratio: 3 / 4;
+    object-fit: cover;
+    display: block;
+    background: rgba(255,255,255,0.02);
+  }
+
+  .real-copy {
+    padding: 16px;
+    display: grid;
+    gap: 8px;
+  }
+
+  .shot-card {
+    padding: 0;
+    overflow: hidden;
+  }
+
+  .shot-visual {
+    position: relative;
+    min-height: 380px;
+    overflow: hidden;
+    isolation: isolate;
+  }
+
+  .shot-visual::before,
+  .shot-visual::after {
+    content: "";
+    position: absolute;
+    inset: auto;
+    pointer-events: none;
+  }
+
+  .guanyin-shot {
+    background:
+      radial-gradient(circle at 50% 16%, rgba(255,255,255,0.22), transparent 12%),
+      radial-gradient(circle at 50% 34%, rgba(164, 217, 235, 0.24), transparent 24%),
+      linear-gradient(180deg, rgba(243,248,255,0.06), rgba(11,10,22,0.95) 72%);
+  }
+
+  .guanyin-shot::before {
+    left: 50%;
+    top: 30px;
+    width: 260px;
+    height: 260px;
+    transform: translateX(-50%);
+    border-radius: 50%;
+    border: 1px solid rgba(255,255,255,0.18);
+    box-shadow:
+      0 0 50px rgba(210, 236, 255, 0.12),
+      inset 0 0 32px rgba(255,255,255,0.06);
+  }
+
+  .guanyin-shot::after {
+    left: 50%;
+    bottom: 30px;
+    width: 220px;
+    height: 56px;
+    transform: translateX(-50%);
+    border-radius: 999px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.28), rgba(255,255,255,0.02));
+    box-shadow: 0 18px 40px rgba(0,0,0,0.35);
+  }
+
+  .caishen-shot {
+    background:
+      radial-gradient(circle at 50% 18%, rgba(255, 230, 172, 0.22), transparent 14%),
+      radial-gradient(circle at 50% 38%, rgba(247, 153, 95, 0.22), transparent 24%),
+      linear-gradient(180deg, rgba(88,33,23,0.3), rgba(18,9,12,0.96) 74%);
+  }
+
+  .caishen-shot::before {
+    left: 50%;
+    top: 42px;
+    width: 280px;
+    height: 280px;
+    transform: translateX(-50%);
+    border-radius: 50%;
+    background:
+      radial-gradient(circle, transparent 56%, rgba(237,199,133,0.82) 57% 63%, transparent 64%),
+      radial-gradient(circle, transparent 70%, rgba(255,255,255,0.12) 71% 72%, transparent 73%);
+    filter: blur(0.4px);
+  }
+
+  .caishen-shot::after {
+    left: 50%;
+    bottom: 34px;
+    width: 244px;
+    height: 60px;
+    transform: translateX(-50%);
+    border-radius: 999px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.24), rgba(255,255,255,0.02));
+    box-shadow: 0 18px 40px rgba(0,0,0,0.35);
+  }
+
+  .deity-render {
+    position: absolute;
+    inset: 0;
+  }
+
+  .deity-render svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+
+  .shot-copy {
+    padding: 20px;
+    display: grid;
+    gap: 10px;
+    background: rgba(8, 6, 13, 0.72);
+  }
+
+  .shot-copy h3 {
+    margin-bottom: 0;
+  }
+
+  .callout {
+    border-color: rgba(237,199,133,0.16);
+    background:
+      radial-gradient(circle at top, rgba(237,199,133,0.12), transparent 40%),
+      rgba(255,255,255,0.03);
+  }
+
+  .ref-image {
+    overflow: hidden;
+    border-radius: 24px;
+    border: 1px solid rgba(255,255,255,0.08);
+    background: rgba(255,255,255,0.04);
+  }
+
+  .ref-image img {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  .material {
+    min-height: 180px;
+    display: grid;
+    align-content: start;
+    gap: 12px;
+  }
+
+  .swatch {
+    height: 66px;
+    border-radius: 16px;
+    border: 1px solid rgba(255,255,255,0.08);
+  }
+
+  .deity-card {
+    min-height: 290px;
+    display: grid;
+    align-content: start;
+    gap: 10px;
+  }
+
+  .deity-card.guanyin { border-top: 3px solid var(--jade); }
+  .deity-card.caishen { border-top: 3px solid var(--gold); }
+  .deity-card.yuelao { border-top: 3px solid var(--rose); }
+  .deity-card.wenchang { border-top: 3px solid var(--ink); }
+  .deity-card.mazu { border-top: 3px solid var(--sea); }
+
+  ul {
+    margin: 0;
+    padding-left: 18px;
+  }
+
+  .source-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 12px;
+  }
+
+  .source-links a {
+    color: var(--text);
+    text-decoration: none;
+    padding: 9px 12px;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    font-size: 13px;
+  }
+
+  @media (max-width: 1100px) {
+    .hero-grid,
+    .section-grid,
+    .material-grid,
+    .deity-grid,
+    .ref-grid,
+    .shot-grid,
+    .real-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+
+<div class="page">
+  <section class="warning">
+    <div class="label">Direction Reset</div>
+    <p>这次不再讨论“像不像网页概念图”，直接锁定你要的质感：<strong>像中国动画电影里出场的神明</strong>，有 3D 体积、神性光、衣袍流动、法器发光、云雾粒子，不是平面 icon，不是游戏低模。</p>
+  </section>
+
+  <section class="section">
+    <h2>当前最优五款形象</h2>
+    <div class="real-grid">
+      <article class="real-card">
+        <img src="../../../../output/kling/guanyin-kling-v2.png" alt="Generated Guanyin final concept">
+        <div class="real-copy">
+          <div class="label">Guanyin Final</div>
+          <p>净瓶、杨柳、满月、莲台都已经成立，识别度最稳。</p>
+        </div>
+      </article>
+      <article class="real-card">
+        <img src="../../../../output/kling/caishen-kling-v3.png" alt="Generated Caishen final concept">
+        <div class="real-copy">
+          <div class="label">Caishen Final</div>
+          <p>红金权柄感更强，官帽、须髯、元宝与财富法器都更明确。</p>
+        </div>
+      </article>
+      <article class="real-card">
+        <img src="../../../../output/kling/yuelao-kling-v3.png" alt="Generated Yuelao final concept">
+        <div class="real-copy">
+          <div class="label">Yuelao Final</div>
+          <p>老神仙感、红线轨迹、月下姻缘氛围已经拉起来了。</p>
+        </div>
+      </article>
+      <article class="real-card">
+        <img src="../../../../output/kling/wenchang-kling-v2.png" alt="Generated Wenchang final concept">
+        <div class="real-copy">
+          <div class="label">Wenchang Final</div>
+          <p>文冠、毛笔、卷轴和星轨文气最完整，文神识别最清楚。</p>
+        </div>
+      </article>
+      <article class="real-card">
+        <img src="../../../../output/kling/mazu-kling-v3.png" alt="Generated Mazu final concept">
+        <div class="real-copy">
+          <div class="label">Mazu Final</div>
+          <p>天后冕冠、海港、灯塔和海神护佑感已经明显区别于观音。</p>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <section class="section">
+    <h2>第一屏先看真参考</h2>
+    <div class="real-grid">
+      <article class="real-card">
+        <img src="./assets/guanyin-ref.jpg" alt="Guanyin statue reference">
+        <div class="real-copy">
+          <div class="label">Guanyin</div>
+          <p>净瓶、杨柳、垂直神性构图。</p>
+        </div>
+      </article>
+      <article class="real-card">
+        <img src="./assets/caishen-ref.jpg" alt="Caishen statue reference">
+        <div class="real-copy">
+          <div class="label">Caishen</div>
+          <p>官帽、须髯、权柄压场。</p>
+        </div>
+      </article>
+      <article class="real-card">
+        <img src="./assets/yuelao-ref.jpg" alt="Yue Lao statue reference">
+        <div class="real-copy">
+          <div class="label">Yuelao</div>
+          <p>老者面相、姻缘主持感。</p>
+        </div>
+      </article>
+      <article class="real-card">
+        <img src="./assets/wenchang-ref.jpg" alt="Wenchang statue reference">
+        <div class="real-copy">
+          <div class="label">Wenchang</div>
+          <p>文运神像、清冷秩序感。</p>
+        </div>
+      </article>
+      <article class="real-card">
+        <img src="./assets/mazu-ref.jpg" alt="Mazu statue reference">
+        <div class="real-copy">
+          <div class="label">Mazu</div>
+          <p>冕冠、海神庇护与仪典感。</p>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <section class="hero">
+    <div class="hero-grid">
+      <div>
+        <div class="label">Target Look</div>
+        <h1>中国神仙 + 3D 特效神像感</h1>
+        <p>
+          我要借鉴的不是某一部动画角色本身，而是<strong>现代中文 CG 神话动画的视觉语言</strong>：
+          体积光、半透明云气、金属与玉石材质、丝绸刺绣、缓慢镜头、神圣出场感。
+        </p>
+        <div class="pill-row">
+          <span class="pill">Volumetric god rays</span>
+          <span class="pill">Silk cloth simulation</span>
+          <span class="pill">Gold + jade shader</span>
+          <span class="pill">Temple iconography</span>
+          <span class="pill">Mythic CG scale</span>
+        </div>
+      </div>
+      <div class="hero-vfx">
+        <div class="vfx-rings">
+          <span></span><span></span><span></span>
+        </div>
+        <div class="vfx-particles">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <h2>真实神像参考墙</h2>
+    <div class="real-grid">
+      <article class="real-card">
+        <img src="./assets/guanyin-ref.jpg" alt="Guanyin statue reference">
+        <div class="real-copy">
+          <div class="label">Guanyin</div>
+          <p>你要的“像神仙”，第一眼必须先像这种庄重、垂直、净瓶杨柳明确的神像。</p>
+        </div>
+      </article>
+      <article class="real-card">
+        <img src="./assets/caishen-ref.jpg" alt="Caishen statue reference">
+        <div class="real-copy">
+          <div class="label">Caishen</div>
+          <p>财神的权威感不是靠金色特效堆出来，是官帽、须髯、法器和正面压场姿态先成立。</p>
+        </div>
+      </article>
+      <article class="real-card">
+        <img src="./assets/yuelao-ref.jpg" alt="Yue Lao statue reference">
+        <div class="real-copy">
+          <div class="label">Yuelao</div>
+          <p>月老一定要有老者、红缘、姻缘册和慈祥但不幼态的命缘主持感。</p>
+        </div>
+      </article>
+      <article class="real-card">
+        <img src="./assets/wenchang-ref.jpg" alt="Wenchang statue reference">
+        <div class="real-copy">
+          <div class="label">Wenchang</div>
+          <p>文昌不是普通书生，是掌文运、考试、文气秩序的神像，所以冠饰与供奉场域很重要。</p>
+        </div>
+      </article>
+      <article class="real-card">
+        <img src="./assets/mazu-ref.jpg" alt="Mazu statue reference">
+        <div class="real-copy">
+          <div class="label">Mazu</div>
+          <p>妈祖要有冕冠、垂旒、云肩和海上护佑感，不能画成普通海洋系女神。</p>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <section class="section">
+    <h2>3D 神仙感要借鉴什么，不借鉴什么</h2>
+    <div class="section-grid">
+      <div class="callout">
+        <div class="label">Borrow</div>
+        <h3>动画电影里的神性出场方式</h3>
+        <ul>
+          <li>人物先有体积，再有光，不是先有 UI 再补角色。</li>
+          <li>衣袍要像有重量的真丝和锦缎，能被风和神力牵引。</li>
+          <li>法器、头冠、珠串要像真实 3D 材质，不是平面贴图。</li>
+          <li>光效是围绕神像服务，不是把角色埋进一堆特效里。</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="label">Avoid</div>
+        <h3>最容易跑偏的 4 个坑</h3>
+        <ul>
+          <li>画成手游皮肤，只有炫技，没有庄重。</li>
+          <li>画成欧美 fantasy angel，丢掉中国神像根基。</li>
+          <li>只剩大光环和粒子，神仙本人不成立。</li>
+          <li>五位神仙长得像同一个模板，只换颜色。</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <h2>3D 材质和特效语言</h2>
+    <div class="material-grid">
+      <article class="material">
+        <div class="swatch" style="background:linear-gradient(145deg,#f6e7bf,#9b6f36 62%,#4b2a12);box-shadow:inset 0 0 34px rgba(255,255,255,0.15),0 10px 30px rgba(237,199,133,0.18);"></div>
+        <h3>鎏金</h3>
+        <p>财神、妈祖冠饰、法器边缘必须有金属真实反光和重量。</p>
+      </article>
+      <article class="material">
+        <div class="swatch" style="background:linear-gradient(145deg,#eff5fb,#b8d7dc 56%,#5e86a2);box-shadow:inset 0 0 34px rgba(255,255,255,0.2),0 10px 30px rgba(166,216,211,0.18);"></div>
+        <h3>白瓷水玉</h3>
+        <p>观音不能是布偶白，要像瓷、玉、月光混合后的静态神性。</p>
+      </article>
+      <article class="material">
+        <div class="swatch" style="background:linear-gradient(145deg,#ffdce8,#e084a8 58%,#6b1d4d);box-shadow:inset 0 0 30px rgba(255,255,255,0.16),0 10px 30px rgba(217,135,168,0.18);"></div>
+        <h3>绯丝红线</h3>
+        <p>月老的红不是俗艳红，要像夜色下发光的丝线和灯火。</p>
+      </article>
+      <article class="material">
+        <div class="swatch" style="background:linear-gradient(145deg,#e9ead8,#9ba786 58%,#27304b);box-shadow:inset 0 0 30px rgba(255,255,255,0.16),0 10px 30px rgba(153,164,128,0.18);"></div>
+        <h3>墨夜星晕</h3>
+        <p>文昌要有夜读星象的感觉，光是冷静的，不是热烈的。</p>
+      </article>
+      <article class="material">
+        <div class="swatch" style="background:linear-gradient(145deg,#e0f4f7,#87c9dd 56%,#1f4368);box-shadow:inset 0 0 30px rgba(255,255,255,0.18),0 10px 30px rgba(137,200,220,0.18);"></div>
+        <h3>海雾神辉</h3>
+        <p>妈祖的蓝不是海洋清新风，是护航时的夜海、雾灯、浪头反光。</p>
+      </article>
+    </div>
+  </section>
+
+  <section class="section">
+    <h2>成片镜头感预演</h2>
+    <div class="shot-grid">
+      <article class="shot-card">
+        <div class="shot-visual guanyin-shot">
+          <div class="deity-render">
+            <svg viewBox="0 0 520 380" aria-hidden="true">
+              <defs>
+                <linearGradient id="g-robe-main" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#f8fbff"/>
+                  <stop offset="38%" stop-color="#d6eef0"/>
+                  <stop offset="70%" stop-color="#b1c5ea"/>
+                  <stop offset="100%" stop-color="#50638e"/>
+                </linearGradient>
+                <linearGradient id="g-sleeve" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0%" stop-color="rgba(255,255,255,0.86)"/>
+                  <stop offset="100%" stop-color="rgba(175,205,245,0.18)"/>
+                </linearGradient>
+              </defs>
+              <path d="M260 58 C316 58 354 96 354 150 C354 182 342 206 326 220 C316 200 306 186 290 174 C294 158 296 144 296 132 C296 100 282 78 260 58 Z" fill="rgba(222,240,255,0.18)"/>
+              <path d="M260 58 C204 58 166 96 166 150 C166 182 178 206 194 220 C204 200 214 186 230 174 C226 158 224 144 224 132 C224 100 238 78 260 58 Z" fill="rgba(222,240,255,0.18)"/>
+              <ellipse cx="260" cy="94" rx="32" ry="40" fill="#f8efe6"/>
+              <path d="M200 322 C214 212 230 154 260 134 C290 154 306 212 320 322 C294 344 226 344 200 322 Z" fill="url(#g-robe-main)"/>
+              <path d="M218 170 C186 206 166 244 154 304 C184 292 206 272 220 240" fill="url(#g-sleeve)"/>
+              <path d="M302 170 C334 206 354 244 366 304 C336 292 314 272 300 240" fill="url(#g-sleeve)"/>
+              <path d="M246 152 C252 144 260 140 268 152 C268 188 268 214 260 238 C252 214 252 188 246 152 Z" fill="rgba(196,243,243,0.94)"/>
+              <path d="M266 144 C286 118 306 100 332 84" stroke="rgba(179,239,200,0.92)" stroke-width="4" stroke-linecap="round"/>
+              <path d="M322 82 C342 84 350 96 344 112 C326 110 318 98 322 82 Z" fill="#aae4bc"/>
+              <path d="M306 102 C324 106 330 118 322 134 C306 130 300 118 306 102 Z" fill="#aae4bc"/>
+              <path d="M222 330 C236 304 248 292 260 292 C272 292 284 304 298 330" stroke="rgba(239,233,255,0.9)" stroke-width="6" stroke-linecap="round" fill="none"/>
+              <path d="M118 118 C166 168 208 198 250 224" stroke="rgba(255,255,255,0.08)" stroke-width="2"/>
+              <path d="M402 118 C354 168 312 198 270 224" stroke="rgba(255,255,255,0.08)" stroke-width="2"/>
+              <circle cx="132" cy="136" r="7" fill="rgba(255,255,255,0.9)"/>
+              <circle cx="380" cy="182" r="10" fill="rgba(255,255,255,0.84)"/>
+              <circle cx="164" cy="262" r="6" fill="rgba(255,255,255,0.72)"/>
+            </svg>
+          </div>
+        </div>
+        <div class="shot-copy">
+          <div class="label">Shot 01</div>
+          <h3>观音：月白水雾中的静定降临</h3>
+          <p>这张的目标不是漂亮，而是“神圣又安静”。人物几乎不动，动的是水雾、柔光、柳叶和袖摆。</p>
+        </div>
+      </article>
+
+      <article class="shot-card">
+        <div class="shot-visual caishen-shot">
+          <div class="deity-render">
+            <svg viewBox="0 0 520 380" aria-hidden="true">
+              <defs>
+                <linearGradient id="c-robe-main" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#ffd8a6"/>
+                  <stop offset="44%" stop-color="#ec925f"/>
+                  <stop offset="78%" stop-color="#8f2f2f"/>
+                  <stop offset="100%" stop-color="#45151e"/>
+                </linearGradient>
+                <linearGradient id="c-sleeve" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0%" stop-color="rgba(255,226,171,0.88)"/>
+                  <stop offset="100%" stop-color="rgba(189,78,38,0.14)"/>
+                </linearGradient>
+              </defs>
+              <rect x="214" y="58" width="92" height="26" rx="12" fill="#efc987"/>
+              <circle cx="234" cy="72" r="6" fill="#7e2430"/>
+              <circle cx="286" cy="72" r="6" fill="#7e2430"/>
+              <ellipse cx="260" cy="114" rx="34" ry="42" fill="#f8eee3"/>
+              <path d="M198 324 C212 212 228 158 260 140 C292 158 308 212 322 324 C296 346 224 346 198 324 Z" fill="url(#c-robe-main)"/>
+              <path d="M218 174 C182 214 164 252 154 306 C186 296 206 276 220 244" fill="url(#c-sleeve)"/>
+              <path d="M302 174 C338 214 356 252 366 306 C334 296 314 276 300 244" fill="url(#c-sleeve)"/>
+              <path d="M232 146 C240 158 248 180 260 208 C272 180 280 158 288 146 C284 198 274 230 260 252 C246 230 236 198 232 146 Z" fill="rgba(72,22,27,0.72)"/>
+              <rect x="232" y="186" width="56" height="98" rx="12" fill="rgba(245,171,104,0.92)" stroke="rgba(255,255,255,0.16)"/>
+              <line x1="248" y1="212" x2="272" y2="212" stroke="rgba(110,36,28,0.54)" stroke-width="6"/>
+              <line x1="248" y1="232" x2="272" y2="232" stroke="rgba(110,36,28,0.54)" stroke-width="6"/>
+              <line x1="248" y1="252" x2="272" y2="252" stroke="rgba(110,36,28,0.54)" stroke-width="6"/>
+              <path d="M138 198 C164 174 190 154 220 140" stroke="rgba(255,211,145,0.14)" stroke-width="3"/>
+              <path d="M382 198 C356 174 330 154 300 140" stroke="rgba(255,211,145,0.14)" stroke-width="3"/>
+              <circle cx="148" cy="268" r="10" fill="rgba(255,210,150,0.9)"/>
+              <circle cx="372" cy="248" r="8" fill="rgba(255,231,176,0.86)"/>
+              <circle cx="334" cy="114" r="6" fill="rgba(255,223,170,0.84)"/>
+            </svg>
+          </div>
+        </div>
+        <div class="shot-copy">
+          <div class="label">Shot 02</div>
+          <h3>财神：金红权柄与宝气压场</h3>
+          <p>这张要像一位真正“管财富流动”的神，不是节庆吉祥物。重点是权柄、厚重、金属感和迎面而来的气场。</p>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <section class="section">
+    <h2>真实参考锚点</h2>
+    <div class="ref-grid">
+      <div class="ref-image">
+        <img src="https://ids.si.edu/ids/download/id/FS-8151_14" alt="Smithsonian Guanyin reference">
+      </div>
+      <div class="card">
+        <div class="label">Anchor Example</div>
+        <h3>观音为什么最适合先做第一张 3D 神像方向图</h3>
+        <p>
+          她的识别结构最完整：净瓶、杨柳、莲意、月光、水雾、静定面相。只要第一张做对，
+          整个产品的“神圣感”就能立住。
+        </p>
+        <ul>
+          <li><strong>真实参考锚点：</strong>净瓶 + 杨柳 + 端正面相 + 垂褶袍服。</li>
+          <li><strong>3D 改写方向：</strong>瓷玉肌理、微透明光晕、水汽粒子、银蓝神辉。</li>
+          <li><strong>镜头语言：</strong>半身或全身正面像，低机位轻微仰视，像神明降临而非人物摆拍。</li>
+        </ul>
+        <div class="source-links">
+          <a href="https://asia.si.edu/explore-art-culture/collections/search/edanmdm%3Afsg_F1917.129/" target="_blank">Smithsonian Guanyin</a>
+          <a href="https://www.travel.taipei/en/featured/details/20126" target="_blank">Yue Lao Context</a>
+          <a href="https://ich.unesco.org/en/RL/mazu-belief-and-customs-00227" target="_blank">UNESCO Mazu</a>
+          <a href="https://www.britannica.com/topic/Caishen" target="_blank">Britannica Caishen</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <h2>五位神仙做成 3D 特效神像时，各自该像什么</h2>
+    <div class="deity-grid">
+      <article class="deity-card guanyin">
+        <div class="label">Guanyin</div>
+        <h3>月白治愈神辉</h3>
+        <p><strong>神像重点：</strong>净瓶、杨柳、月白长袍、莲意底座。</p>
+        <p><strong>特效重点：</strong>水雾、月晕、细碎光珠、柔和反射。</p>
+        <p><strong>像哪种动画镜头：</strong>神明静止站立，风和雾在动。</p>
+      </article>
+      <article class="deity-card caishen">
+        <div class="label">Caishen</div>
+        <h3>金红权柄降临</h3>
+        <p><strong>神像重点：</strong>官帽、长须、财榜、厚袍、正面权威。</p>
+        <p><strong>特效重点：</strong>鎏金光、火纹、宝气、金属高光。</p>
+        <p><strong>像哪种动画镜头：</strong>神像出场带压迫感和财富气场。</p>
+      </article>
+      <article class="deity-card yuelao">
+        <div class="label">Yuelao</div>
+        <h3>月下红线命缘</h3>
+        <p><strong>神像重点：</strong>红线、姻缘簿、老者慈颜、暖灯。</p>
+        <p><strong>特效重点：</strong>丝线流光、灯笼虚化、月辉边缘光。</p>
+        <p><strong>像哪种动画镜头：</strong>红线自己在空气里生长和缠绕。</p>
+      </article>
+      <article class="deity-card wenchang">
+        <div class="label">Wenchang</div>
+        <h3>文运星宿显形</h3>
+        <p><strong>神像重点：</strong>星冠、书卷、文笔、夜色书生气。</p>
+        <p><strong>特效重点：</strong>墨迹粒子、星轨、冷色神光、纸页发光。</p>
+        <p><strong>像哪种动画镜头：</strong>安静，但四周的星象在运转。</p>
+      </article>
+      <article class="deity-card mazu">
+        <div class="label">Mazu</div>
+        <h3>海雾护航圣像</h3>
+        <p><strong>神像重点：</strong>冕冠、垂旒、云肩、海灯、船意象。</p>
+        <p><strong>特效重点：</strong>夜海雾灯、潮湿反光、风压布料、航海光标。</p>
+        <p><strong>像哪种动画镜头：</strong>她一出现，风浪像被安抚下来。</p>
+      </article>
+    </div>
+  </section>
+
+  <section class="section">
+    <h2>我下一步会直接落地的两张形象图</h2>
+    <div class="section-grid">
+      <div class="source-card">
+        <div class="label">First Render</div>
+        <h3>观音 3D 神像方向图</h3>
+        <p>目的：先把“神性、庄重、疗愈、材质高级”立住。这一张决定整个产品是不是像数字神龛，而不是玄学小玩具。</p>
+      </div>
+      <div class="source-card">
+        <div class="label">Second Render</div>
+        <h3>财神 3D 神像方向图</h3>
+        <p>目的：验证第二种极端气质能否成立。观音负责静，财神负责压场。两张做对，五位神仙的世界观就能定型。</p>
+      </div>
+    </div>
+  </section>
+</div>
