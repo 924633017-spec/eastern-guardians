@@ -3506,98 +3506,54 @@ function App() {
             </div>
           </div>
 
-          <div className="ritual-grid">
-            <article id="daily-guidance" className="panel ritual-panel ritual-panel-guidance">
-              <p className="eyebrow">Offer Incense</p>
-              <h3>{activeCompanion.streak === 0 ? `Light incense for ${activeDeity.name}` : `${activeDeity.name} is already with you today`}</h3>
-              <p className="muted">Choose one offering and keep this guardian close today.</p>
-              <div className={`incense-ritual-banner ${ritualComplete ? "lit" : ""}`}>
-                <div className="incense-ritual-copy">
-                  <span>Incense days</span>
-                  <strong>{activeCompanion.streak}</strong>
-                  <p>{ritualComplete ? "Today's incense is burning at the altar." : "Light today's incense and the altar will begin to glow."}</p>
-                </div>
-                <button className={`incense-action-button ${ritualComplete ? "lit" : ""}`} onClick={performRitual} disabled={ritualComplete}>
-                  <i className="incense-action-aura" aria-hidden="true" />
-                  <i className="incense-action-tray" aria-hidden="true" />
-                  <i className="incense-action-icon" aria-hidden="true">
-                    <b className="incense-stick-icon incense-stick-icon-left" />
-                    <b className="incense-stick-icon incense-stick-icon-center" />
-                    <b className="incense-stick-icon incense-stick-icon-right" />
-                    <span className="incense-smoke-icon smoke-icon-a" />
-                    <span className="incense-smoke-icon smoke-icon-b" />
-                    <span className="incense-smoke-icon smoke-icon-c" />
-                  </i>
-                  <span>{ritualComplete ? "Incense offered today" : "Light incense now"}</span>
-                </button>
+          <div className="ritual-grid ritual-grid-share-first">
+            <article className="panel ritual-panel ritual-panel-share ritual-panel-share-primary">
+              <div className="share-panel-header">
+                <p className="eyebrow">Share Card</p>
+                <h3>Make the blessing look worth sending.</h3>
+                <p className="muted">This is the part people save, screenshot, and pass to someone else. The card preview stays central, and the rest of the page now supports that moment.</p>
               </div>
-              <div className="offering-picker">
-                {activeDeity.offerings.map((offering) => (
-                  <button
-                    key={offering}
-                    type="button"
-                    className={`offering-chip ${selectedOffering === offering ? "active" : ""}`}
-                    onClick={() => setSelectedOffering(offering)}
-                  >
-                    {offering}
-                  </button>
-                ))}
-              </div>
-              {latestWish ? (
-                <div className={`ritual-receipt ritual-receipt-${activeDeity.id}`}>
-                  <span>Today's offering</span>
-                  <strong>{latestWishDisplayLine}</strong>
-                </div>
-              ) : null}
-              {ritualOutcome ? (
-                <div className={`ritual-outcome ritual-outcome-${activeDeity.id}`}>
-                  <div className="ritual-outcome-header">
-                    <span>Today's blessing</span>
-                    <em>{activeDeity.name}</em>
+
+              <div className="share-stage-layout">
+                <div className="share-stage-preview">
+                  <div className={`share-preview-shell finish-${activeCardFinish.id}`}>
+                    <div className="share-preview-meta">
+                      <span>Blessing card preview</span>
+                      <strong>{activeDeity.name}</strong>
+                    </div>
+                    <img className="share-preview-image" src={shareCardPreview} alt={`${activeDeity.name} guardian card preview`} />
                   </div>
-                  <strong>{ritualOutcome.blessing}</strong>
-                  <p>{ritualOutcome.offering}</p>
-                  <small>{ritualOutcome.omen}</small>
                 </div>
-              ) : null}
-            </article>
 
-            <article className="panel ritual-panel ritual-panel-share">
-              <p className="eyebrow">Share Card</p>
-              <h3>Save your guardian card or send it to a friend.</h3>
-              <p className="muted">Your card includes the guardian you invited and a blessing message you can share.</p>
+                <div className="share-stage-copy">
+                  <div className="share-card">
+                    <span className="share-label">{shareCardLabel}</span>
+                    <strong>{activeDeity.name}</strong>
+                    <p>
+                      {activeDeity.themes[0]} • Lucky {luckyNumber}
+                    </p>
+                    <p className="share-spirit-line">{shareCardSpiritLine}</p>
+                    <div className="share-signal-row">
+                      <span>Save for yourself</span>
+                      <span>Post to social</span>
+                      <span>Send a blessing</span>
+                    </div>
+                    <small>{oracle}</small>
+                    <small className="share-legal-note">Mythology-inspired and symbolic, not guaranteed advice or outcomes.</small>
+                  </div>
 
-              <div className="share-card">
-                <span className="share-label">{shareCardLabel}</span>
-                <strong>{activeDeity.name}</strong>
-                <p>
-                  {activeDeity.themes[0]} • Lucky {luckyNumber}
-                </p>
-                <p className="share-spirit-line">{shareCardSpiritLine}</p>
-                <div className="share-signal-row">
-                  <span>Save it for yourself</span>
-                  <span>Send a blessing to a friend</span>
+                  <div className="share-actions">
+                    <button className="primary-button share-button" onClick={exportShareCard} disabled={!shareCardReady}>
+                      {shareCardReady ? "Save blessing card" : "Rendering blessing card"}
+                    </button>
+                    <button className="ghost-button share-button" onClick={() => void copyOracle()}>
+                      Copy share text
+                    </button>
+                  </div>
+
+                  {shareMessage ? <p className="share-feedback share-feedback-primary">{shareMessage}</p> : null}
                 </div>
-                <small>{oracle}</small>
-                <small className="share-legal-note">Mythology-inspired and symbolic, not guaranteed advice or outcomes.</small>
               </div>
-              <div className={`share-preview-shell finish-${activeCardFinish.id}`}>
-                <div className="share-preview-meta">
-                  <span>Blessing card preview</span>
-                  <strong>{activeDeity.name}</strong>
-                </div>
-                <img className="share-preview-image" src={shareCardPreview} alt={`${activeDeity.name} guardian card preview`} />
-              </div>
-
-              <div className="share-actions">
-                <button className="primary-button share-button" onClick={exportShareCard} disabled={!shareCardReady}>
-                  {shareCardReady ? "Save blessing card" : "Rendering blessing card"}
-                </button>
-                <button className="ghost-button share-button" onClick={() => void copyOracle()}>
-                  Copy share text
-                </button>
-              </div>
-              {shareMessage ? <p className="share-feedback">{shareMessage}</p> : null}
             </article>
           </div>
 
@@ -3701,6 +3657,63 @@ function App() {
                 </div>
               )}
             </section>
+          </div>
+
+          <div className="ritual-guidance-stage">
+            <article id="daily-guidance" className="panel ritual-panel ritual-panel-guidance ritual-panel-guidance-secondary">
+              <p className="eyebrow">Offer Incense</p>
+              <h3>{activeCompanion.streak === 0 ? `Light incense for ${activeDeity.name}` : `${activeDeity.name} is already with you today`}</h3>
+              <p className="muted">Choose one offering and keep this guardian close today.</p>
+              <div className={`incense-ritual-banner ${ritualComplete ? "lit" : ""}`}>
+                <div className="incense-ritual-copy">
+                  <span>Incense days</span>
+                  <strong>{activeCompanion.streak}</strong>
+                  <p>{ritualComplete ? "Today's incense is burning at the altar." : "Light today's incense and the altar will begin to glow."}</p>
+                </div>
+                <button className={`incense-action-button ${ritualComplete ? "lit" : ""}`} onClick={performRitual} disabled={ritualComplete}>
+                  <i className="incense-action-aura" aria-hidden="true" />
+                  <i className="incense-action-tray" aria-hidden="true" />
+                  <i className="incense-action-icon" aria-hidden="true">
+                    <b className="incense-stick-icon incense-stick-icon-left" />
+                    <b className="incense-stick-icon incense-stick-icon-center" />
+                    <b className="incense-stick-icon incense-stick-icon-right" />
+                    <span className="incense-smoke-icon smoke-icon-a" />
+                    <span className="incense-smoke-icon smoke-icon-b" />
+                    <span className="incense-smoke-icon smoke-icon-c" />
+                  </i>
+                  <span>{ritualComplete ? "Incense offered today" : "Light incense now"}</span>
+                </button>
+              </div>
+              <div className="offering-picker">
+                {activeDeity.offerings.map((offering) => (
+                  <button
+                    key={offering}
+                    type="button"
+                    className={`offering-chip ${selectedOffering === offering ? "active" : ""}`}
+                    onClick={() => setSelectedOffering(offering)}
+                  >
+                    {offering}
+                  </button>
+                ))}
+              </div>
+              {latestWish ? (
+                <div className={`ritual-receipt ritual-receipt-${activeDeity.id}`}>
+                  <span>Today's offering</span>
+                  <strong>{latestWishDisplayLine}</strong>
+                </div>
+              ) : null}
+              {ritualOutcome ? (
+                <div className={`ritual-outcome ritual-outcome-${activeDeity.id}`}>
+                  <div className="ritual-outcome-header">
+                    <span>Today's blessing</span>
+                    <em>{activeDeity.name}</em>
+                  </div>
+                  <strong>{ritualOutcome.blessing}</strong>
+                  <p>{ritualOutcome.offering}</p>
+                  <small>{ritualOutcome.omen}</small>
+                </div>
+              ) : null}
+            </article>
           </div>
         </section>
       </section>
