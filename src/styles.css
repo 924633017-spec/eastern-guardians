@@ -3279,6 +3279,12 @@ textarea {
     0 28px 60px rgba(0, 0, 0, 0.2);
 }
 
+.altar-visual-condensed {
+  min-height: 420px;
+  margin-top: 1.1rem;
+  margin-bottom: 0.6rem;
+}
+
 .shrine-page-guanyin .altar-visual {
   background:
     radial-gradient(circle at 50% 14%, rgba(246, 249, 255, 0.18), transparent 20%),
@@ -4223,6 +4229,13 @@ textarea {
   margin: 0 0 0.4rem;
 }
 
+.result-hero-grid-share-first {
+  grid-template-columns: minmax(280px, 0.54fr) minmax(0, 1.46fr);
+  align-items: start;
+  gap: 1.15rem;
+  margin-top: 1rem;
+}
+
 .result-hero-card {
   position: relative;
   display: grid;
@@ -4273,6 +4286,56 @@ textarea {
   box-shadow:
     inset 0 0 30px rgba(255, 255, 255, 0.03),
     0 24px 42px rgba(0, 0, 0, 0.18);
+}
+
+.result-share-hero {
+  display: grid;
+  gap: 1rem;
+  padding: 1.4rem;
+  border-radius: 32px;
+  background:
+    radial-gradient(circle at top right, color-mix(in srgb, var(--accent-a) 14%, transparent), transparent 28%),
+    radial-gradient(circle at 16% 14%, rgba(255, 255, 255, 0.08), transparent 18%),
+    linear-gradient(180deg, rgba(17, 14, 30, 0.96), rgba(7, 6, 14, 0.98));
+  border: 1px solid rgba(255, 255, 255, 0.11);
+  box-shadow:
+    inset 0 0 34px rgba(255, 255, 255, 0.02),
+    0 28px 58px rgba(0, 0, 0, 0.22);
+}
+
+.result-share-hero-header {
+  display: grid;
+  gap: 0.45rem;
+  max-width: 46rem;
+}
+
+.result-share-hero-header h3 {
+  margin: 0;
+  font-family: "Cormorant Garamond", serif;
+  font-size: clamp(2.15rem, 3.4vw, 3.25rem);
+  line-height: 0.95;
+  color: rgba(255, 247, 231, 0.98);
+}
+
+.result-share-hero-header p {
+  margin: 0;
+}
+
+.result-share-hero-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(300px, 0.85fr);
+  gap: 1.15rem;
+  align-items: start;
+}
+
+.result-share-hero-sidebar {
+  display: grid;
+  gap: 1rem;
+  align-content: start;
+}
+
+.result-share-actions {
+  grid-template-columns: 1fr;
 }
 
 .result-hero-actions {
@@ -7489,6 +7552,15 @@ textarea {
   .guardian-preview-figure {
     min-height: 280px;
   }
+
+  .result-hero-grid-share-first,
+  .result-share-hero-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .altar-visual-condensed {
+    min-height: 360px;
+  }
 }
 
 @media (max-width: 720px) {
@@ -7678,6 +7750,10 @@ textarea {
 
   .altar-visual {
     min-height: 500px;
+  }
+
+  .altar-visual-condensed {
+    min-height: 300px;
   }
 
   .scene-incense-altar {
