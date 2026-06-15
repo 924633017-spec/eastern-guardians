@@ -1769,7 +1769,6 @@ function getGuardianAccessLabel({
 
   if (
     hasAllGuardiansUnlocked(unlockedPacks) ||
-    companion.guardianBond > 0 ||
     unlockedPacks.includes(getRecommendedRitualPack(deity).title)
   ) {
     return "Unlocked";
@@ -1792,7 +1791,6 @@ function isGuardianUnlocked({
   return (
     deity.id === primaryDeityId ||
     hasAllGuardiansUnlocked(unlockedPacks) ||
-    companion.guardianBond > 0 ||
     unlockedPacks.includes(getRecommendedRitualPack(deity).title)
   );
 }
