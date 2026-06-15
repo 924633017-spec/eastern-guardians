@@ -3662,21 +3662,11 @@ function App() {
                   </button>
                 ))}
               </div>
-              {latestWish ? (
-                <div className={`ritual-receipt ritual-receipt-${activeDeity.id}`}>
-                  <span>Today's offering</span>
-                  <strong>{latestWishDisplayLine}</strong>
-                </div>
-              ) : null}
               {ritualOutcome ? (
                 <div className={`ritual-outcome ritual-outcome-${activeDeity.id}`}>
-                  <div className="ritual-outcome-header">
-                    <span>Today's blessing</span>
-                    <em>{activeDeity.name}</em>
-                  </div>
+                  <span>Today's blessing</span>
                   <strong>{ritualOutcome.blessing}</strong>
-                  <p>{ritualOutcome.offering}</p>
-                  <small>{ritualOutcome.omen}</small>
+                  <small>{latestWish ? latestWishDisplayLine : ritualOutcome.omen}</small>
                 </div>
               ) : null}
             </article>

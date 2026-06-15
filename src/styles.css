@@ -4854,8 +4854,8 @@ textarea {
 
 .ritual-outcome {
   display: grid;
-  gap: 0.7rem;
-  padding: 1.15rem 1.15rem 1.05rem;
+  gap: 0.55rem;
+  padding: 1rem 1rem 0.95rem;
   border-radius: 26px;
   background:
     radial-gradient(circle at top right, color-mix(in srgb, var(--accent-a) 12%, transparent), transparent 34%),
@@ -4865,21 +4865,6 @@ textarea {
   box-shadow:
     inset 0 0 22px rgba(255, 255, 255, 0.02),
     0 16px 30px rgba(0, 0, 0, 0.12);
-}
-
-.ritual-outcome-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-}
-
-.ritual-outcome-header em {
-  font-style: normal;
-  color: rgba(255, 243, 220, 0.72);
-  font-size: 0.82rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
 }
 
 .ritual-outcome-guanyin {
@@ -4924,159 +4909,16 @@ textarea {
   display: block;
   margin-top: 0;
   font-family: "Cormorant Garamond", serif;
-  font-size: 1.65rem;
-  line-height: 1.3;
+  font-size: 1.38rem;
+  line-height: 1.24;
   color: rgba(255, 247, 234, 0.96);
-}
-
-.ritual-outcome p {
-  margin: 0;
-  color: rgba(255, 233, 197, 0.9);
-  line-height: 1.5;
-  font-size: 0.88rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
 }
 
 .ritual-outcome small {
   display: block;
-  margin-top: 0.05rem;
+  margin-top: 0.1rem;
   color: rgba(244, 237, 230, 0.64);
-  line-height: 1.5;
-}
-
-.ritual-track {
-  display: grid;
-  gap: 0.8rem;
-}
-
-.ritual-step {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  gap: 0.85rem;
-  padding: 1rem 1.05rem;
-  border-radius: 22px;
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.02));
-  border: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.ritual-step i {
-  display: grid;
-  place-items: center;
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.06);
-  color: rgba(244, 237, 230, 0.82);
-  font-style: normal;
-  font-size: 0.8rem;
-  font-weight: 700;
-}
-
-.ritual-step strong {
-  display: block;
-  margin-bottom: 0.35rem;
-}
-
-.ritual-step p {
-  margin: 0;
-  color: var(--muted);
-  line-height: 1.55;
-}
-
-.ritual-step.complete {
-  background:
-    radial-gradient(circle at top right, color-mix(in srgb, var(--accent-a) 12%, transparent), transparent 42%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.03));
-}
-
-.ritual-step.complete i {
-  background: linear-gradient(135deg, var(--accent-a), var(--accent-b));
-  color: #17111f;
-}
-
-.ritual-step-guanyin.complete {
-  background:
-    radial-gradient(circle at top right, rgba(214, 237, 241, 0.14), transparent 42%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.07), rgba(24, 26, 38, 0.4));
-}
-
-.ritual-step-caishen.complete {
-  background:
-    radial-gradient(circle at top right, rgba(255, 210, 130, 0.16), transparent 42%),
-    linear-gradient(180deg, rgba(112, 34, 29, 0.24), rgba(26, 14, 16, 0.4));
-}
-
-.ritual-step-yuelao.complete {
-  background:
-    radial-gradient(circle at top right, rgba(244, 180, 211, 0.16), transparent 42%),
-    linear-gradient(180deg, rgba(100, 30, 63, 0.22), rgba(24, 12, 20, 0.42));
-}
-
-.ritual-step-wenchang.complete {
-  background:
-    radial-gradient(circle at top right, rgba(220, 233, 191, 0.12), transparent 42%),
-    linear-gradient(180deg, rgba(43, 51, 38, 0.22), rgba(18, 18, 20, 0.4));
-}
-
-.ritual-step-mazu.complete {
-  background:
-    radial-gradient(circle at top right, rgba(186, 239, 245, 0.13), transparent 42%),
-    linear-gradient(180deg, rgba(26, 62, 76, 0.22), rgba(13, 16, 20, 0.4));
-}
-
-.ritual-receipt {
-  padding: 1rem;
-  border-radius: 20px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.ritual-receipt-guanyin {
-  background:
-    radial-gradient(circle at top right, rgba(216, 238, 242, 0.12), transparent 40%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.055), rgba(22, 24, 36, 0.34));
-}
-
-.ritual-receipt-caishen {
-  background:
-    radial-gradient(circle at top right, rgba(255, 208, 128, 0.14), transparent 40%),
-    linear-gradient(180deg, rgba(109, 35, 28, 0.22), rgba(23, 12, 14, 0.34));
-}
-
-.ritual-receipt-yuelao {
-  background:
-    radial-gradient(circle at top right, rgba(244, 179, 208, 0.14), transparent 40%),
-    linear-gradient(180deg, rgba(95, 28, 61, 0.22), rgba(22, 11, 19, 0.34));
-}
-
-.ritual-receipt-wenchang {
-  background:
-    radial-gradient(circle at top right, rgba(219, 232, 188, 0.1), transparent 40%),
-    linear-gradient(180deg, rgba(43, 52, 37, 0.2), rgba(16, 16, 18, 0.34));
-}
-
-.ritual-receipt-mazu {
-  background:
-    radial-gradient(circle at top right, rgba(186, 238, 244, 0.12), transparent 40%),
-    linear-gradient(180deg, rgba(24, 61, 74, 0.2), rgba(12, 14, 19, 0.34));
-}
-
-.ritual-receipt span {
-  display: block;
-  color: rgba(244, 237, 230, 0.58);
-  text-transform: uppercase;
-  letter-spacing: 0.14em;
-  font-size: 0.74rem;
-}
-
-.ritual-receipt strong {
-  display: block;
-  margin-top: 0.55rem;
-  font-family: "Cormorant Garamond", serif;
-  font-size: 1.4rem;
-  line-height: 1.3;
+  line-height: 1.45;
 }
 
 .memory-vault {
