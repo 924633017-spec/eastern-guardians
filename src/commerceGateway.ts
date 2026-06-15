@@ -103,6 +103,35 @@ function createSessionId(prefix: string) {
   return `${prefix}_${Math.random().toString(36).slice(2, 10)}_${Date.now().toString(36)}`;
 }
 
+const GUMROAD_PUBLIC_CHECKOUT_LINKS: Record<string, string> = {
+  "Unlock All Guardians": "https://3031515762782.gumroad.com/l/exlzpj",
+  "Unlock Mazu": "https://3031515762782.gumroad.com/l/dxvtoa",
+  "Unlock Wenchang": "https://3031515762782.gumroad.com/l/utmjtd",
+  "Unlock Yuelao": "https://3031515762782.gumroad.com/l/rikiky",
+  "Unlock Caishen": "https://3031515762782.gumroad.com/l/rvlpyw",
+  "Unlock Guanyin": "https://3031515762782.gumroad.com/l/nudiz"
+};
+
+function resolveGumroadCheckoutLink(title: string, configuredLink?: string) {
+  const fallbackLink = GUMROAD_PUBLIC_CHECKOUT_LINKS[title] ?? "";
+  const trimmedConfiguredLink = configuredLink?.trim() ?? "";
+
+  if (!trimmedConfiguredLink) {
+    return fallbackLink;
+  }
+
+  try {
+    const parsed = new URL(trimmedConfiguredLink);
+    if (parsed.hostname.endsWith("gumroad.com") && parsed.pathname.startsWith("/d/")) {
+      return fallbackLink || trimmedConfiguredLink;
+    }
+  } catch {
+    return fallbackLink || trimmedConfiguredLink;
+  }
+
+  return trimmedConfiguredLink;
+}
+
 function readStoredCommerce() {
   const raw = localStorage.getItem(STORAGE_KEY);
   if (!raw) {
@@ -206,12 +235,12 @@ function createHostedCheckoutUrl(params: {
   returnUrl.searchParams.set("title", params.title);
 
   const gumroadPackLinks: Record<string, string> = {
-    "Unlock All Guardians": import.meta.env.VITE_GUMROAD_UNLOCK_ALL_URL?.trim() ?? "",
-    "Unlock Mazu": import.meta.env.VITE_GUMROAD_UNLOCK_MAZU_URL?.trim() ?? "",
-    "Unlock Wenchang": import.meta.env.VITE_GUMROAD_UNLOCK_WENCHANG_URL?.trim() ?? "",
-    "Unlock Yuelao": import.meta.env.VITE_GUMROAD_UNLOCK_YUELAO_URL?.trim() ?? "",
-    "Unlock Caishen": import.meta.env.VITE_GUMROAD_UNLOCK_CAISHEN_URL?.trim() ?? "",
-    "Unlock Guanyin": import.meta.env.VITE_GUMROAD_UNLOCK_GUANYIN_URL?.trim() ?? ""
+    "Unlock All Guardians": resolveGumroadCheckoutLink("Unlock All Guardians", import.meta.env.VITE_GUMROAD_UNLOCK_ALL_URL),
+    "Unlock Mazu": resolveGumroadCheckoutLink("Unlock Mazu", import.meta.env.VITE_GUMROAD_UNLOCK_MAZU_URL),
+    "Unlock Wenchang": resolveGumroadCheckoutLink("Unlock Wenchang", import.meta.env.VITE_GUMROAD_UNLOCK_WENCHANG_URL),
+    "Unlock Yuelao": resolveGumroadCheckoutLink("Unlock Yuelao", import.meta.env.VITE_GUMROAD_UNLOCK_YUELAO_URL),
+    "Unlock Caishen": resolveGumroadCheckoutLink("Unlock Caishen", import.meta.env.VITE_GUMROAD_UNLOCK_CAISHEN_URL),
+    "Unlock Guanyin": resolveGumroadCheckoutLink("Unlock Guanyin", import.meta.env.VITE_GUMROAD_UNLOCK_GUANYIN_URL)
   };
 
   const externalLink =
