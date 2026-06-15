@@ -177,6 +177,10 @@ function getDefaultCheckoutEmail() {
   return "hello@mythicguardian.app";
 }
 
+function wait(ms: number) {
+  return new Promise((resolve) => window.setTimeout(resolve, ms));
+}
+
 function readPendingGumroadCheckout(): PendingGumroadCheckout | null {
   try {
     const raw = localStorage.getItem(GUMROAD_PENDING_CHECKOUT_KEY);
@@ -2113,9 +2117,44 @@ function App() {
           }
 
           if (checkoutProvider === "gumroad" && checkoutSessionId) {
-            const sessionStatus = await commerceGateway.getCheckoutSessionStatus(checkoutSessionId);
+            let sessionCompleted = false;
 
-            if (!sessionStatus.found || sessionStatus.status !== "completed") {
+            for (let attempt = 0; attempt < 5; attempt += 1) {
+              const sessionStatus = await commerceGateway.getCheckoutSessionStatus(checkoutSessionId);
+              if (sessionStatus.found && sessionStatus.status === "completed") {
+                sessionCompleted = true;
+                break;
+              }
+
+              if (attempt < 4) {
+                setCheckoutReturnMessage("Payment return detected. Waiting for Gumroad confirmation...");
+                await wait(1500);
+              }
+            }
+
+            if (!sessionCompleted) {
+              const restoredState = await commerceGateway.restorePurchases({
+                email: normalizedCheckoutEmail
+              });
+              const restoredEntitlements = deriveCommerceEntitlements(restoredState);
+              const restoredPackUnlocked = restoredEntitlements.unlockedPacks.includes(pack.title);
+
+              if (restoredPackUnlocked) {
+                setCommerceState(restoredState);
+                applyCommerceEntitlements(restoredEntitlements.membershipTier, restoredEntitlements.unlockedPacks);
+                setRestoreEmail(normalizedCheckoutEmail);
+                setShareMessage(`${pack.title} confirmed for ${normalizedCheckoutEmail}.`);
+                setCheckoutReturnState("success");
+                setCheckoutReturnMessage(
+                  pack.title === allGuardiansPack.title
+                    ? "Payment confirmed. All five guardians are now unlocked."
+                    : `Payment confirmed. ${pack.guardian} is now unlocked.`
+                );
+                setSelectedPack(null);
+                clearPendingGumroadCheckout(checkoutSessionId);
+                return;
+              }
+
               setRestoreEmail(normalizedCheckoutEmail);
               setCheckoutReturnState("error");
               setCheckoutReturnMessage(
