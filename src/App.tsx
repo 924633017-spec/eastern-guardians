@@ -3487,7 +3487,11 @@ function App() {
                 Start over
               </button>
             </div>
-            <div className="result-hero-grid result-hero-grid-share-first">
+            <div className="altar-visual">
+              <ShrineScene deity={activeDeity} sceneState={sceneState} sceneVersion={sceneVersion} />
+            </div>
+
+            <div className="result-hero-grid">
               <article className="result-hero-card result-hero-card-primary">
                 <span className="detail-label">Your matched guardian</span>
                 <h3>{activeDeity.name}</h3>
@@ -3496,65 +3500,61 @@ function App() {
                   <button className="primary-button" onClick={scrollToGuidanceSection}>
                     Keep this blessing close
                   </button>
-                  <small>Save it, read it, or keep it quietly with you today.</small>
-                </div>
-              </article>
+                <small>Save it, read it, or keep it quietly with you today.</small>
+              </div>
+            </article>
+            </div>
+          </div>
 
-              <article className="result-share-hero">
-                <div className="result-share-hero-header">
-                  <p className="eyebrow">Share Card</p>
-                  <h3>Make the blessing look worth sending.</h3>
-                  <p className="muted">
-                    This is the part people save, screenshot, and pass to someone else. The card preview now leads the result page.
-                  </p>
-                </div>
+          <div className="ritual-grid ritual-grid-share-first">
+            <article className="panel ritual-panel ritual-panel-share ritual-panel-share-primary">
+              <div className="share-panel-header">
+                <p className="eyebrow">Share Card</p>
+                <h3>Make the blessing look worth sending.</h3>
+                <p className="muted">This is the part people save, screenshot, and pass to someone else. The card preview stays central, and the rest of the page now supports that moment.</p>
+              </div>
 
-                <div className="result-share-hero-layout">
-                  <div className="share-stage-preview">
-                    <div className={`share-preview-shell finish-${activeCardFinish.id}`}>
-                      <div className="share-preview-meta">
-                        <span>Blessing card preview</span>
-                        <strong>{activeDeity.name}</strong>
-                      </div>
-                      <img className="share-preview-image" src={shareCardPreview} alt={`${activeDeity.name} guardian card preview`} />
-                    </div>
-                  </div>
-
-                  <div className="result-share-hero-sidebar">
-                    <div className="share-card">
-                      <span className="share-label">{shareCardLabel}</span>
+              <div className="share-stage-layout">
+                <div className="share-stage-preview">
+                  <div className={`share-preview-shell finish-${activeCardFinish.id}`}>
+                    <div className="share-preview-meta">
+                      <span>Blessing card preview</span>
                       <strong>{activeDeity.name}</strong>
-                      <p>
-                        {activeDeity.themes[0]} • Lucky {luckyNumber}
-                      </p>
-                      <p className="share-spirit-line">{shareCardSpiritLine}</p>
-                      <div className="share-signal-row">
-                        <span>Save for yourself</span>
-                        <span>Post to social</span>
-                        <span>Send a blessing</span>
-                      </div>
-                      <small>{oracle}</small>
-                      <small className="share-legal-note">Mythology-inspired and symbolic, not guaranteed advice or outcomes.</small>
                     </div>
-
-                    <div className="share-actions result-share-actions">
-                      <button className="primary-button share-button" onClick={exportShareCard} disabled={!shareCardReady}>
-                        {shareCardReady ? "Save blessing card" : "Rendering blessing card"}
-                      </button>
-                      <button className="ghost-button share-button" onClick={() => void copyOracle()}>
-                        Copy share text
-                      </button>
-                    </div>
-
-                    {shareMessage ? <p className="share-feedback share-feedback-primary">{shareMessage}</p> : null}
+                    <img className="share-preview-image" src={shareCardPreview} alt={`${activeDeity.name} guardian card preview`} />
                   </div>
                 </div>
-              </article>
-            </div>
 
-            <div className="altar-visual altar-visual-condensed">
-              <ShrineScene deity={activeDeity} sceneState={sceneState} sceneVersion={sceneVersion} />
-            </div>
+                <div className="share-stage-copy">
+                  <div className="share-card">
+                    <span className="share-label">{shareCardLabel}</span>
+                    <strong>{activeDeity.name}</strong>
+                    <p>
+                      {activeDeity.themes[0]} • Lucky {luckyNumber}
+                    </p>
+                    <p className="share-spirit-line">{shareCardSpiritLine}</p>
+                    <div className="share-signal-row">
+                      <span>Save for yourself</span>
+                      <span>Post to social</span>
+                      <span>Send a blessing</span>
+                    </div>
+                    <small>{oracle}</small>
+                    <small className="share-legal-note">Mythology-inspired and symbolic, not guaranteed advice or outcomes.</small>
+                  </div>
+
+                  <div className="share-actions">
+                    <button className="primary-button share-button" onClick={exportShareCard} disabled={!shareCardReady}>
+                      {shareCardReady ? "Save blessing card" : "Rendering blessing card"}
+                    </button>
+                    <button className="ghost-button share-button" onClick={() => void copyOracle()}>
+                      Copy share text
+                    </button>
+                  </div>
+
+                  {shareMessage ? <p className="share-feedback share-feedback-primary">{shareMessage}</p> : null}
+                </div>
+              </div>
+            </article>
           </div>
 
           <div className="growth-grid">
