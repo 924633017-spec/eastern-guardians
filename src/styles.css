@@ -1816,9 +1816,9 @@ textarea {
 }
 
 .sigil-band {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
+  display: grid;
+  gap: 0.22rem;
+  align-content: start;
   margin: 0;
   padding: 1rem 1.05rem;
   border-radius: 22px;
@@ -1838,7 +1838,12 @@ textarea {
 
 .sigil-band strong {
   font-family: "Cormorant Garamond", serif;
-  font-size: 1.45rem;
+  display: block;
+  max-width: 100%;
+  margin-top: 0.12rem;
+  font-size: clamp(1rem, 1.8vw, 1.32rem);
+  line-height: 1.08;
+  overflow-wrap: anywhere;
 }
 
 .deity-pulse-bar {
@@ -1938,9 +1943,8 @@ textarea {
 }
 
 .energy-badge {
-  display: inline-flex;
-  flex-direction: column;
-  gap: 0.1rem;
+  display: grid;
+  gap: 0.18rem;
   padding: 0.92rem 1rem;
   border-radius: 22px;
   width: 100%;
@@ -2005,6 +2009,10 @@ textarea {
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.85rem;
   margin-bottom: 0.9rem;
+}
+
+.compact-meta-row > * {
+  min-width: 0;
 }
 
 .stat-row {
