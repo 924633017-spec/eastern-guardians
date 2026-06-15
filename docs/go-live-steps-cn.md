@@ -215,8 +215,9 @@ VITE_COMMERCE_API_BASE=https://eastern-guardians-commerce.onrender.com
 3. 点击 `Pay on Gumroad`
 4. 用测试邮箱支付
 5. 回到网页
-6. 点击 `Restore access`
-7. 看是否真正解锁
+6. 看页面是否自动确认解锁
+7. 如果 webhook 延迟，再点击 `Restore access`
+8. 看是否真正解锁
 
 如果不成功，就去看：
 

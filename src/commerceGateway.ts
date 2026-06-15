@@ -29,6 +29,10 @@ export type RestorePurchasesRequest = {
   email: string;
 };
 
+export type CheckoutSessionStatusRequest = {
+  sessionId: string;
+};
+
 export type CheckoutSession = {
   sessionId: string;
   provider: MerchantOfRecordProvider;
@@ -36,6 +40,23 @@ export type CheckoutSession = {
   redirectUrl: string;
   status: "pending" | "requires_manual_review" | "completed";
   message: string;
+};
+
+export type CheckoutSessionStatus = {
+  found: boolean;
+  status: "pending" | "completed" | "expired" | "missing";
+  session?: {
+    sessionId: string;
+    provider: MerchantOfRecordProvider;
+    mode: "subscription" | "pack";
+    email: string;
+    title: string;
+    guardian?: string;
+    priceLabel: string;
+    status: "pending" | "completed" | "expired";
+    createdAt: string;
+    completedAt: string | null;
+  };
 };
 
 export type ProviderReadiness = {
@@ -49,6 +70,7 @@ export type CommerceGateway = {
   load(): Promise<CommerceState>;
   createSubscriptionCheckoutSession(input: SubscriptionCheckoutRequest): Promise<CheckoutSession>;
   createPackCheckoutSession(input: PackCheckoutRequest): Promise<CheckoutSession>;
+  getCheckoutSessionStatus(sessionId: string): Promise<CheckoutSessionStatus>;
   confirmSubscriptionCheckout(input: SubscriptionCheckoutRequest): Promise<CommerceState>;
   confirmPackCheckout(input: PackCheckoutRequest): Promise<CommerceState>;
   restorePurchases(input: RestorePurchasesRequest): Promise<CommerceState>;
@@ -64,6 +86,7 @@ type RemoteGatewayPayload = {
     | "track"
     | "create_subscription_checkout_session"
     | "create_pack_checkout_session"
+    | "get_checkout_session_status"
     | "confirm_subscription_checkout"
     | "confirm_pack_checkout"
     | "restore_purchases";
@@ -72,7 +95,8 @@ type RemoteGatewayPayload = {
   input?:
     | SubscriptionCheckoutRequest
     | PackCheckoutRequest
-    | RestorePurchasesRequest;
+    | RestorePurchasesRequest
+    | CheckoutSessionStatusRequest;
 };
 
 function createSessionId(prefix: string) {
@@ -353,6 +377,13 @@ export function createLocalCommerceGateway(): CommerceGateway {
       return persistCommerce(nextState);
     },
 
+    async getCheckoutSessionStatus(sessionId) {
+      return {
+        found: false,
+        status: "missing"
+      };
+    },
+
     async confirmPackCheckout(input) {
       const nextState = trackCommerceEvent(
         unlockPackPurchase(readStoredCommerce(), input),
@@ -407,6 +438,13 @@ export function createRemoteCommerceGateway(): CommerceGateway {
         action: "create_pack_checkout_session",
         input
       }) as Promise<CheckoutSession>;
+    },
+
+    async getCheckoutSessionStatus(sessionId) {
+      return postRemoteGateway({
+        action: "get_checkout_session_status",
+        input: { sessionId }
+      }) as Promise<CheckoutSessionStatus>;
     },
 
     async confirmSubscriptionCheckout(input) {

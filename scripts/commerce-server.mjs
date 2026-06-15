@@ -2,7 +2,7 @@ import http from "node:http";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 
-const PORT = Number(process.env.COMMERCE_PORT || 8787);
+const PORT = Number(process.env.PORT || process.env.COMMERCE_PORT || 8787);
 const STORE_PATH = resolve(process.cwd(), ".local-commerce-state.json");
 const PROVIDER = process.env.PAYMENT_PROVIDER || "paddle";
 const GUMROAD_WEBHOOK_SECRET = process.env.GUMROAD_WEBHOOK_SECRET || "";
@@ -30,8 +30,43 @@ function createDefaultState() {
     account: null,
     subscription: null,
     orders: [],
-    analyticsEvents: []
+    analyticsEvents: [],
+    checkoutSessions: []
   };
+}
+
+function normalizeCheckoutSessions(value) {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value
+    .filter((session) => session && typeof session === "object")
+    .map((session) => ({
+      sessionId: String(session.sessionId || "").trim(),
+      provider: String(session.provider || "").trim() || "manual_waitlist",
+      mode: session.mode === "subscription" ? "subscription" : "pack",
+      email: String(session.email || "").trim().toLowerCase(),
+      title: String(session.title || "").trim(),
+      guardian: typeof session.guardian === "string" ? session.guardian : undefined,
+      priceLabel: typeof session.priceLabel === "string" ? session.priceLabel : "",
+      status:
+        session.status === "completed" || session.status === "expired"
+          ? session.status
+          : "pending",
+      createdAt:
+        typeof session.createdAt === "string" && !Number.isNaN(Date.parse(session.createdAt))
+          ? session.createdAt
+          : new Date().toISOString(),
+      completedAt:
+        typeof session.completedAt === "string" && !Number.isNaN(Date.parse(session.completedAt))
+          ? session.completedAt
+          : null,
+      gumroadPermalink:
+        typeof session.gumroadPermalink === "string" ? session.gumroadPermalink : undefined,
+      gumroadSaleId: typeof session.gumroadSaleId === "string" ? session.gumroadSaleId : undefined
+    }))
+    .filter((session) => session.sessionId);
 }
 
 function readState() {
@@ -40,7 +75,12 @@ function readState() {
   }
 
   try {
-    return JSON.parse(readFileSync(STORE_PATH, "utf8"));
+    const parsed = JSON.parse(readFileSync(STORE_PATH, "utf8"));
+    return {
+      ...createDefaultState(),
+      ...parsed,
+      checkoutSessions: normalizeCheckoutSessions(parsed?.checkoutSessions)
+    };
   } catch {
     return createDefaultState();
   }
@@ -201,10 +241,77 @@ function hasExistingPackOrder(state, email, title) {
   );
 }
 
+function upsertCheckoutSession(state, session) {
+  const checkoutSessions = normalizeCheckoutSessions(state.checkoutSessions);
+  const existingIndex = checkoutSessions.findIndex(
+    (entry) => entry.sessionId === session.sessionId
+  );
+
+  if (existingIndex >= 0) {
+    const nextSessions = [...checkoutSessions];
+    nextSessions[existingIndex] = {
+      ...nextSessions[existingIndex],
+      ...session
+    };
+    return {
+      ...state,
+      checkoutSessions: nextSessions
+    };
+  }
+
+  return {
+    ...state,
+    checkoutSessions: [...checkoutSessions, session].slice(-300)
+  };
+}
+
+function findMatchingCheckoutSession(state, { email, title, guardian }) {
+  const normalizedEmail = String(email || "").trim().toLowerCase();
+  const normalizedTitle = String(title || "").trim();
+  const normalizedGuardian = String(guardian || "").trim();
+
+  return normalizeCheckoutSessions(state.checkoutSessions)
+    .filter(
+      (session) =>
+        session.status === "pending" &&
+        session.mode === "pack" &&
+        session.provider === "gumroad" &&
+        session.email === normalizedEmail
+    )
+    .sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt))
+    .find(
+      (session) =>
+        session.title === normalizedTitle &&
+        (!normalizedGuardian || !session.guardian || session.guardian === normalizedGuardian)
+    );
+}
+
+function markCheckoutSessionCompleted(state, sessionId, details = {}) {
+  if (!sessionId) {
+    return state;
+  }
+
+  const existing = normalizeCheckoutSessions(state.checkoutSessions).find(
+    (session) => session.sessionId === sessionId
+  );
+
+  if (!existing) {
+    return state;
+  }
+
+  return upsertCheckoutSession(state, {
+    ...existing,
+    status: "completed",
+    completedAt: new Date().toISOString(),
+    ...details
+  });
+}
+
 function handleGumroadSale(state, payload) {
   const permalink = String(payload.product_permalink || "").trim().toLowerCase();
   const product = GUMROAD_PRODUCT_MAP[permalink];
   const email = String(payload.email || payload.purchaser_email || "").trim().toLowerCase();
+  const gumroadSaleId = String(payload.sale_id || payload.purchase_id || "").trim();
 
   if (!product || !email) {
     return track(state, "gumroad_sale_ignored", {
@@ -221,14 +328,25 @@ function handleGumroadSale(state, payload) {
     });
   }
 
+  const matchedSession = findMatchingCheckoutSession(state, {
+    email,
+    title: product.title,
+    guardian: product.guardian
+  });
   const next = upsertAccount(state, email);
   const purchasedAt = new Date().toISOString();
+  const withCompletedSession = matchedSession
+    ? markCheckoutSessionCompleted(next, matchedSession.sessionId, {
+        gumroadPermalink: permalink,
+        gumroadSaleId
+      })
+    : next;
 
   return track(
     {
-      ...next,
+      ...withCompletedSession,
       orders: [
-        ...next.orders,
+        ...withCompletedSession.orders,
         {
           id: createId("ord"),
           email,
@@ -247,7 +365,9 @@ function handleGumroadSale(state, payload) {
       email,
       packTitle: product.title,
       guardian: product.guardian,
-      permalink
+      permalink,
+      sessionId: matchedSession?.sessionId || "",
+      gumroadSaleId
     }
   );
 }
@@ -260,18 +380,65 @@ function createSession(input, mode) {
         : "Guardian Plus"
       : input.title;
 
+  const sessionId = createId(mode === "subscription" ? "sub" : "pack");
+
   return {
-    sessionId: createId(mode === "subscription" ? "sub" : "pack"),
+    sessionId,
     provider: PROVIDER,
     mode,
     redirectUrl: `/?checkout=success&mode=${mode}&email=${encodeURIComponent(
       String(input.email).trim().toLowerCase()
-    )}&title=${encodeURIComponent(title)}`,
+    )}&title=${encodeURIComponent(title)}&checkout_session=${encodeURIComponent(sessionId)}`,
     status: PROVIDER === "manual_waitlist" ? "requires_manual_review" : "pending",
     message:
       PROVIDER === "manual_waitlist"
         ? "Live charging is not active yet. Capture this buyer in the launch list first."
         : "Hosted checkout session created."
+  };
+}
+
+function createPackSession(state, input) {
+  const session = createSession(input, "pack");
+
+  if (PROVIDER !== "gumroad") {
+    return { nextState: state, session };
+  }
+
+  const nextState = upsertCheckoutSession(state, {
+    sessionId: session.sessionId,
+    provider: "gumroad",
+    mode: "pack",
+    email: String(input.email || "").trim().toLowerCase(),
+    title: String(input.title || "").trim(),
+    guardian: typeof input.guardian === "string" ? input.guardian : undefined,
+    priceLabel: typeof input.priceLabel === "string" ? input.priceLabel : "",
+    status: "pending",
+    createdAt: new Date().toISOString(),
+    completedAt: null
+  });
+
+  return { nextState, session };
+}
+
+function getCheckoutSessionStatus(state, input) {
+  const sessionId = String(input.sessionId || "").trim();
+
+  if (!sessionId) {
+    return { found: false, status: "missing" };
+  }
+
+  const session = normalizeCheckoutSessions(state.checkoutSessions).find(
+    (entry) => entry.sessionId === sessionId
+  );
+
+  if (!session) {
+    return { found: false, status: "missing" };
+  }
+
+  return {
+    found: true,
+    status: session.status,
+    session
   };
 }
 
@@ -349,16 +516,15 @@ const server = http.createServer(async (req, res) => {
           return;
         }
         case "create_pack_checkout_session": {
-          const next = writeState(
-            track(state, "checkout_session_created", {
-              provider: PROVIDER,
-              mode: "pack",
-              guardian: payload.input?.guardian || "Unknown",
-              packTitle: payload.input?.title || "Untitled"
-            })
-          );
-          void next;
-          json(res, 200, createSession(payload.input || {}, "pack"));
+          const trackedState = track(state, "checkout_session_created", {
+            provider: PROVIDER,
+            mode: "pack",
+            guardian: payload.input?.guardian || "Unknown",
+            packTitle: payload.input?.title || "Untitled"
+          });
+          const { nextState, session } = createPackSession(trackedState, payload.input || {});
+          writeState(nextState);
+          json(res, 200, session);
           return;
         }
         case "confirm_subscription_checkout": {
@@ -374,6 +540,10 @@ const server = http.createServer(async (req, res) => {
         case "restore_purchases": {
           const next = writeState(handleRestore(state, payload.input || {}));
           json(res, 200, next);
+          return;
+        }
+        case "get_checkout_session_status": {
+          json(res, 200, getCheckoutSessionStatus(state, payload.input || {}));
           return;
         }
         default: {

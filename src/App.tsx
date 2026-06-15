@@ -2008,6 +2008,7 @@ function App() {
     const params = new URLSearchParams(window.location.search);
     const checkoutStatus = params.get("checkout");
     const checkoutSessionId = params.get("checkout_session");
+    const checkoutProvider = params.get("provider");
     const checkoutMode = params.get("mode");
     const checkoutEmail = params.get("email");
     const checkoutTitle = params.get("title");
@@ -2020,7 +2021,11 @@ function App() {
 
     async function confirmReturnedCheckout() {
       setCheckoutReturnState("processing");
-      setCheckoutReturnMessage("Payment received. Unlocking your guardian now...");
+      setCheckoutReturnMessage(
+        checkoutProvider === "gumroad"
+          ? "Payment return detected. Confirming your Gumroad unlock now..."
+          : "Payment received. Unlocking your guardian now..."
+      );
       try {
         if (checkoutMode === "subscription") {
           const inferredTarget = checkoutTitle === "Oracle Circle" ? "oracle" : "plus";
@@ -2050,6 +2055,19 @@ function App() {
             setCheckoutReturnState("error");
             setCheckoutReturnMessage("Payment returned, but we could not identify the guardian unlock.");
             return;
+          }
+
+          if (checkoutProvider === "gumroad" && checkoutSessionId) {
+            const sessionStatus = await commerceGateway.getCheckoutSessionStatus(checkoutSessionId);
+
+            if (!sessionStatus.found || sessionStatus.status !== "completed") {
+              setRestoreEmail(normalizedCheckoutEmail);
+              setCheckoutReturnState("error");
+              setCheckoutReturnMessage(
+                "We have not received Gumroad's payment confirmation yet. Please wait a moment, then tap Restore access with the same checkout email."
+              );
+              return;
+            }
           }
 
           const nextCommerceState = await commerceGateway.confirmPackCheckout({
@@ -3483,7 +3501,7 @@ function App() {
               {providerReadiness.provider === "gumroad" ? (
                 <div className="checkout-urgency-note commerce-status-grid">
                   <span>Gumroad checkout flow</span>
-                  <strong>Pay on Gumroad in a new tab, then come back here to continue access setup with the same email.</strong>
+                  <strong>Pay on Gumroad in a new tab, then return here with the same email so your unlock can be confirmed and opened inside the website.</strong>
                   <small className="checkout-helper-line">Current restore email: {restoreEmail || recentCommerceEmail || getDefaultCheckoutEmail()}</small>
                   <button className="ghost-button commerce-restore-button" onClick={() => void handleRestorePurchases()}>
                     Restore access
@@ -3617,7 +3635,7 @@ function App() {
                   <span>After payment</span>
                   <strong>
                     {providerReadiness.provider === "gumroad"
-                      ? "Gumroad opens in a new tab. After payment, return to this page and continue access setup with the same checkout email."
+                      ? "Gumroad opens in a new tab. After payment, return to this page and your guardian unlock will be confirmed here with the same checkout email."
                       : selectedPack.title === allGuardiansPack.title
                         ? "Checkout opens in a secure payment page, then returns here so your full guardian collection can unlock inside the website."
                         : "Checkout opens in a secure payment page, then returns here so this guardian can unlock inside the website."}
@@ -3626,14 +3644,14 @@ function App() {
                 {providerReadiness.provider === "gumroad" ? (
                   <div className="checkout-urgency-note">
                     <span>Restore access</span>
-                    <strong>Use the same email you pay with on Gumroad. This launch build is still finishing the automatic Gumroad verification layer.</strong>
+                    <strong>Use the same email you pay with on Gumroad. If the webhook arrives a little late, Restore access will pull the unlock back into your shrine.</strong>
                     <small className="checkout-helper-line">Current restore email: {restoreEmail || recentCommerceEmail || getDefaultCheckoutEmail()}</small>
                   </div>
                 ) : null}
                 {providerReadiness.provider === "gumroad" ? (
                   <div className="checkout-summary-note">
                     <span>Simple flow</span>
-                    <strong>1. Pay on Gumroad. 2. Return here. 3. Continue access setup with the same email. 4. Automatic verification is the final launch step still being connected.</strong>
+                    <strong>1. Pay on Gumroad. 2. Return here. 3. We confirm the payment from your checkout email. 4. If confirmation is delayed, tap Restore access.</strong>
                   </div>
                 ) : null}
                 <div className="upgrade-sheet-benefits">
