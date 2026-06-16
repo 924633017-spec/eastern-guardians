@@ -2561,6 +2561,18 @@ function App() {
   };
 
   const startOnboarding = () => {
+    if (hasProfile) {
+      setStaticPage(null);
+      setViewedDeityId(profile.deityId);
+      setSelectedOffering(
+        profile.companions[profile.deityId].latestOffering ??
+          (deities.find((deity) => deity.id === profile.deityId)?.offerings[0] ?? deities[0].offerings[0])
+      );
+      setActiveView("shrine");
+      scrollToTop();
+      return;
+    }
+
     void commerceGateway.track("onboarding_started", {
       source: activeView
     }).then((state) => {
@@ -2572,6 +2584,14 @@ function App() {
   };
 
   const completeOnboarding = () => {
+    if (hasProfile) {
+      setStaticPage(null);
+      setViewedDeityId(profile.deityId);
+      setActiveView("shrine");
+      scrollToTop();
+      return;
+    }
+
     const derivedIntention = profile.intention;
     const selectedDeity = pickRecommendedDeity(profile.zodiac, derivedIntention);
     const nextProfile = {
@@ -2688,6 +2708,13 @@ function App() {
     setHasProfile(false);
     setSelectedOffering(deities[0].offerings[0]);
     setViewedDeityId(defaultProfile.deityId);
+    setStaticPage(null);
+    setActiveView("landing");
+    setShareMessage("");
+    scrollToTop();
+  };
+
+  const returnHome = () => {
     setStaticPage(null);
     setActiveView("landing");
     setShareMessage("");
@@ -3138,9 +3165,11 @@ function App() {
             </p>
             <div className="hero-actions">
               <button className="primary-button" onClick={startOnboarding}>
-                Choose my guardian
+                {hasProfile ? "Return to my guardian" : "Choose my guardian"}
               </button>
-              <span className="micro-copy">Your first guardian is free.</span>
+              <span className="micro-copy">
+                {hasProfile ? "Your first guardian is already chosen." : "Your first guardian is free."}
+              </span>
             </div>
             <div className="landing-simple-note">
               <span>Simple ritual</span>
@@ -3385,8 +3414,8 @@ function App() {
                 <h2>{revealHeading}</h2>
                 <p className="lead compact">{resultHeroLine}</p>
               </div>
-              <button className="ghost-button" onClick={resetExperience}>
-                Start over
+              <button className="ghost-button" onClick={returnHome}>
+                Back home
               </button>
             </div>
             <div className="altar-visual">
