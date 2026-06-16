@@ -1929,6 +1929,8 @@ function App() {
     }
     try {
       const parsed = realignProfileGuardian(normalizeProfile(JSON.parse(saved) as ShrineProfile));
+      const checkoutReturned = new URLSearchParams(window.location.search).get("checkout") === "success";
+      const matchedStaticPage = getStaticPageFromPath(window.location.pathname);
       setProfile(parsed);
       setSelectedOffering(
         parsed.companions[parsed.deityId].latestOffering ??
@@ -1936,7 +1938,7 @@ function App() {
       );
       setViewedDeityId(parsed.deityId);
       setHasProfile(true);
-      setActiveView("shrine");
+      setActiveView(checkoutReturned && !matchedStaticPage ? "shrine" : "landing");
       localStorage.setItem(STORAGE_KEY, JSON.stringify(parsed));
     } catch {
       localStorage.removeItem(STORAGE_KEY);
