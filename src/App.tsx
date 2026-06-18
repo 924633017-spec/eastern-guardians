@@ -1213,7 +1213,7 @@ function buildCompatibilityReading({
     counterpartGuardian.id === supportGuardian.id || counterpartIntention === profile.intention
       ? `A useful shared practice this week is ${sharedWords[0].toLowerCase()} with clearer naming and calmer timing.`
       : `A useful shared practice this week is slowing down enough to notice when ${sharedWords[0].toLowerCase()} and ${sharedWords[1].toLowerCase()} are asking for different things.`;
-  const shareLine = `${counterpartNameLabel} and I used Mythic Guardian as a shared mirror, not a verdict or prediction. ${titleMap[mode]} under ${activeDeity.name} and ${counterpartGuardian.name}.`;
+  const shareLine = `${counterpartNameLabel} and I used Eastern Guardians as a shared mirror, not a verdict or prediction. ${titleMap[mode]} under ${activeDeity.name} and ${counterpartGuardian.name}.`;
 
   return {
     title: titleMap[mode],
@@ -3019,8 +3019,8 @@ function App() {
     const pageMeta: Record<StaticPageId, { eyebrow: string; title: string; intro: string }> = {
       trust: {
         eyebrow: "Trust & Safety",
-        title: "How to use Mythic Guardian.",
-        intro: "Mythic Guardian is a symbolic ritual product. It is for reflection and comfort, not facts, advice, or crisis support."
+        title: "How to use Eastern Guardians.",
+        intro: "Eastern Guardians is a symbolic ritual product. It is for reflection and comfort, not facts, advice, or crisis support."
       },
       privacy: {
         eyebrow: "Privacy",

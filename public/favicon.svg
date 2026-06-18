@@ -1,13 +1,30 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
   <defs>
-    <radialGradient id="g" cx="35%" cy="30%" r="70%">
-      <stop offset="0%" stop-color="#f6efe4"/>
-      <stop offset="50%" stop-color="#db9a68"/>
-      <stop offset="100%" stop-color="#32152f"/>
+    <radialGradient id="bgGlow" cx="30%" cy="22%" r="78%">
+      <stop offset="0%" stop-color="#25313c"/>
+      <stop offset="55%" stop-color="#151124"/>
+      <stop offset="100%" stop-color="#090611"/>
     </radialGradient>
+    <radialGradient id="orb" cx="50%" cy="42%" r="56%">
+      <stop offset="0%" stop-color="#fff4dd"/>
+      <stop offset="42%" stop-color="#f0c58f"/>
+      <stop offset="72%" stop-color="#c98855"/>
+      <stop offset="100%" stop-color="#6e3b46"/>
+    </radialGradient>
+    <linearGradient id="sigil" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fff5e8"/>
+      <stop offset="100%" stop-color="#e9d6bb"/>
+    </linearGradient>
   </defs>
-  <rect width="128" height="128" rx="30" fill="#120f1f"/>
-  <circle cx="64" cy="56" r="28" fill="url(#g)"/>
-  <path d="M28 102c12-18 60-18 72 0" fill="none" stroke="#f6efe4" stroke-width="8" stroke-linecap="round"/>
-  <circle cx="64" cy="56" r="18" fill="none" stroke="#f8f2eb" stroke-opacity=".65" stroke-width="2"/>
+  <rect width="128" height="128" rx="30" fill="url(#bgGlow)"/>
+  <circle cx="64" cy="50" r="29" fill="url(#orb)"/>
+  <circle cx="64" cy="50" r="20" fill="none" stroke="#fff7ee" stroke-opacity=".72" stroke-width="2"/>
+  <circle cx="64" cy="50" r="36" fill="none" stroke="#f4ddc6" stroke-opacity=".16" stroke-width="2"/>
+  <path d="M64 32l6.4 11.2L64 54.8l-6.4-11.6L64 32z" fill="#fff8f1" fill-opacity=".9"/>
+  <path d="M64 59c10.8 0 20.2 5.4 25.8 14.8" fill="none" stroke="url(#sigil)" stroke-width="5.2" stroke-linecap="round"/>
+  <path d="M64 59c-10.8 0-20.2 5.4-25.8 14.8" fill="none" stroke="url(#sigil)" stroke-width="5.2" stroke-linecap="round"/>
+  <path d="M44 91c6.2 5.6 14 8.4 20 8.4s13.8-2.8 20-8.4" fill="none" stroke="url(#sigil)" stroke-width="5.8" stroke-linecap="round"/>
+  <circle cx="39" cy="41" r="1.8" fill="#fff0de" fill-opacity=".7"/>
+  <circle cx="89" cy="36" r="1.8" fill="#fff0de" fill-opacity=".55"/>
+  <circle cx="92" cy="80" r="1.6" fill="#fff0de" fill-opacity=".45"/>
 </svg>

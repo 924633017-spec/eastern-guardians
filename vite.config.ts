@@ -7,11 +7,11 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: "autoUpdate",
-      includeAssets: ["favicon.svg"],
+      includeAssets: ["favicon.png"],
       manifest: {
-        name: "Mythic Guardian",
-        short_name: "Guardian",
-        description: "A Chinese mythology-inspired desktop companion for guidance, focus, love, healing, and protection.",
+        name: "Eastern Guardians",
+        short_name: "Guardians",
+        description: "A symbolic web ritual inspired by Eastern mythology for healing, prosperity, love, focus, and protection.",
         theme_color: "#120f1f",
         background_color: "#120f1f",
         display: "standalone",
